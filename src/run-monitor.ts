@@ -1,4 +1,5 @@
 import process from 'node:process'
+import packageJson from '../package.json'
 import { loadConfig, logConfigSummary } from './config'
 import { Logger } from './logging/logger'
 import { BlockListener } from './monitor/blockListener'
@@ -9,6 +10,7 @@ import { WindowsToastNotifier } from './notifications/windows-toast'
 export async function runMonitor(): Promise<void> {
   const config = loadConfig()
   const logger = new Logger(config.logLevel, config.logFilePath)
+  logger.info(`Gas Notify v${packageJson.version} starting`)
   logConfigSummary(logger, config)
 
   const stateStore = new StateStore(config.stateFilePath)
