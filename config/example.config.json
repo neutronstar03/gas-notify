@@ -1,0 +1,36 @@
+{
+  "$schema": "./config.schema.json",
+  "thresholds": [
+    {
+      "name": "watch-20",
+      "gwei": 20,
+      "direction": "below",
+      "message": "Base fee dropped under 20 gwei"
+    },
+    {
+      "name": "cheap-15",
+      "gwei": 15,
+      "direction": "below",
+      "message": "Base fee moved under 15 gwei"
+    },
+    {
+      "name": "spike-40",
+      "gwei": 40,
+      "direction": "above",
+      "message": "Base fee climbed above 40 gwei"
+    }
+  ],
+  "preferredRpcs": [
+    {
+      "url": "wss://ethereum-rpc.publicnode.com"
+    }
+  ],
+  "fallbackRpcs": [
+    {
+      "url": "https://ethereum-rpc.publicnode.com"
+    },
+    {
+      "url": "https://0xrpc.io/eth"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+node_modules/
+.idea/
+.vscode/
+dist/
+logs/
+data/
+tmp/
+config/*.local.json
+vendor/SnoreToast.exe

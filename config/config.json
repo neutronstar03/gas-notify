@@ -1,0 +1,25 @@
+{
+  "$schema": "./config.schema.json",
+  "logLevel": "debug",
+  "thresholds": [
+    {
+      "name": "watch-20",
+      "gwei": 0.06,
+      "direction": "below",
+      "message": "Transact on mainnet is now cheap"
+    }
+  ],
+  "preferredRpcs": [
+    {
+      "url": "wss://ethereum-rpc.publicnode.com"
+    }
+  ],
+  "fallbackRpcs": [
+    {
+      "url": "https://ethereum-rpc.publicnode.com"
+    },
+    {
+      "url": "https://0xrpc.io/eth"
+    }
+  ]
+}

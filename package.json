@@ -1,0 +1,20 @@
+{
+  "name": "gas-notify",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "bun run src/main.ts",
+    "dev": "bun --watch run src/main.ts",
+    "check": "bunx tsc --noEmit",
+    "validate:rpcs": "bun run scripts/validate-rpcs.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^7.7.2",
+    "@types/bun": "latest",
+    "eslint": "^10.0.3",
+    "typescript": "^5.9.2"
+  }
+}
