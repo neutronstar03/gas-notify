@@ -6,4 +6,3 @@ logs/
 data/
 tmp/
 config/*.local.json
-vendor/SnoreToast.exe

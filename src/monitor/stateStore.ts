@@ -2,7 +2,7 @@ import type { PersistedState } from '../types'
 import fs from 'node:fs'
 import path from 'node:path'
 
-const EMPTY_STATE: PersistedState = { thresholds: {} }
+const EMPTY_STATE: PersistedState = { thresholdState: {} }
 
 export class StateStore {
   constructor(private readonly filePath: string) {
@@ -14,9 +14,12 @@ export class StateStore {
       return structuredClone(EMPTY_STATE)
     }
 
+    const rawState = JSON.parse(fs.readFileSync(this.filePath, 'utf8')) as PersistedState & { thresholds?: PersistedState['thresholdState'] }
+
     return {
       ...EMPTY_STATE,
-      ...(JSON.parse(fs.readFileSync(this.filePath, 'utf8')) as PersistedState),
+      ...rawState,
+      thresholdState: rawState.thresholdState ?? rawState.thresholds ?? {},
     }
   }
 

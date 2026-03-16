@@ -4,16 +4,16 @@ import { Logger } from './logging/logger'
 import { BlockListener } from './monitor/blockListener'
 import { FeeEvaluator } from './monitor/feeEvaluator'
 import { StateStore } from './monitor/stateStore'
-import { SnoreToastNotifier } from './notifications/snoretoast'
+import { WindowsToastNotifier } from './notifications/windows-toast'
 
-async function main(): Promise<void> {
+export async function runMonitor(): Promise<void> {
   const config = loadConfig()
   const logger = new Logger(config.logLevel, config.logFilePath)
   logConfigSummary(logger, config)
 
   const stateStore = new StateStore(config.stateFilePath)
   const evaluator = new FeeEvaluator(config.thresholds, stateStore.load(), config.notifyOnStartupState)
-  const notifier = new SnoreToastNotifier(config, logger.child('notify'))
+  const notifier = new WindowsToastNotifier(config, logger.child('notify'))
   const listener = new BlockListener(
     config,
     async (observation) => {
@@ -53,5 +53,3 @@ async function main(): Promise<void> {
 
   await listener.run()
 }
-
-void main()

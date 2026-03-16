@@ -10,7 +10,7 @@ export class FeeEvaluator {
   ) {
     this.thresholds = thresholds
     this.state = initialState
-    this.state.thresholds ||= {}
+    this.state.thresholdState ||= {}
   }
 
   private readonly thresholds: ThresholdRule[]
@@ -19,14 +19,14 @@ export class FeeEvaluator {
     const events: NotificationEvent[] = []
 
     for (const threshold of this.thresholds) {
-      const current = this.state.thresholds[threshold.name] ?? { position: 'unknown' as ThresholdPosition }
+      const current = this.state.thresholdState[threshold.name] ?? { position: 'unknown' as ThresholdPosition }
       const previousPosition = current.position
       const nextPosition = resolvePosition(observation.baseFeeGwei, threshold, previousPosition)
       const isCrossing = previousPosition !== 'unknown' && nextPosition !== previousPosition
       const cooldownMs = threshold.cooldownSeconds * 1000
       const cooldownActive = current.lastNotificationAt !== undefined && observation.timestampMs - current.lastNotificationAt < cooldownMs
 
-      this.state.thresholds[threshold.name] = {
+      this.state.thresholdState[threshold.name] = {
         position: nextPosition,
         lastNotificationAt: current.lastNotificationAt,
       }
@@ -47,7 +47,7 @@ export class FeeEvaluator {
         continue
       }
 
-      this.state.thresholds[threshold.name].lastNotificationAt = observation.timestampMs
+      this.state.thresholdState[threshold.name].lastNotificationAt = observation.timestampMs
       events.push({
         threshold,
         observation,

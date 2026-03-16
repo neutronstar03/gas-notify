@@ -1,3 +1,4 @@
+import os from 'node:os'
 import path from 'node:path'
 import process from 'node:process'
 
@@ -45,5 +46,18 @@ export function timestampLine(): string {
 }
 
 export function relativeOrAbsolutePath(input: string): string {
-  return path.isAbsolute(input) ? input : resolveFromRoot(input)
+  const expandedInput = expandHome(input)
+  return path.isAbsolute(expandedInput) ? expandedInput : resolveFromRoot(expandedInput)
+}
+
+function expandHome(input: string): string {
+  if (input === '~') {
+    return os.homedir()
+  }
+
+  if (input.startsWith(`~${path.sep}`)) {
+    return path.join(os.homedir(), input.slice(2))
+  }
+
+  return input
 }

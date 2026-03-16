@@ -35,7 +35,10 @@ export interface RpcEndpoint {
 export interface AppConfig {
   notificationTitle: string
   appId: string
+  notificationIconPath?: string
   silentNotifications: boolean
+  playNotificationSound: boolean
+  notificationSoundPath?: string
   cooldownSeconds: number
   reconnectBaseDelayMs: number
   reconnectMaxDelayMs: number
@@ -49,7 +52,6 @@ export interface AppConfig {
   logFilePath?: string
   stateFilePath: string
   configPath: string
-  snoreToastPath?: string
   thresholds: ThresholdRule[]
   preferredRpcs: RpcEndpoint[]
   fallbackRpcs: RpcEndpoint[]
@@ -71,7 +73,7 @@ export interface ThresholdState {
 }
 
 export interface PersistedState {
-  thresholds: Record<string, ThresholdState>
+  thresholdState: Record<string, ThresholdState>
   lastSeenBlock?: string
   lastSeenBaseFeeGwei?: number
   lastUpdatedAt?: number

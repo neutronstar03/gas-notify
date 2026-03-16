@@ -1,15 +1,21 @@
 {
   "name": "gas-notify",
   "type": "module",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
+  "bin": {
+    "gas-notify": "./src/cli.ts"
+  },
   "scripts": {
-    "start": "bun run src/main.ts",
-    "dev": "bun --watch run src/main.ts",
+    "start": "bun run src/cli.ts",
+    "dev": "bun --watch run src/cli.ts",
     "check": "bunx tsc --noEmit",
     "validate:rpcs": "bun run scripts/validate-rpcs.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "toasted-notifier": "^10.1.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.7.2",

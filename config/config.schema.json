@@ -82,15 +82,27 @@
     },
     "notificationTitle": {
       "type": "string",
-      "default": "Ethereum Base Fee"
+      "default": "Gas Notify"
     },
     "appId": {
       "type": "string",
-      "default": "GasNotify.BaseFee"
+      "default": "Gas Notify"
+    },
+    "notificationIconPath": {
+      "type": "string",
+      "description": "Optional path to a local PNG used in the toast body."
     },
     "silentNotifications": {
       "type": "boolean",
-      "default": false
+      "default": true
+    },
+    "playNotificationSound": {
+      "type": "boolean",
+      "default": true
+    },
+    "notificationSoundPath": {
+      "type": "string",
+      "description": "Optional path to a bundled or custom notification sound file."
     },
     "notifyOnStartupState": {
       "type": "boolean",
@@ -102,11 +114,12 @@
     },
     "logFilePath": {
       "type": "string",
-      "description": "Optional log file path relative to the repo root or absolute."
+      "default": "~/.local/share/gas-notify/logs/gas-notify.log",
+      "description": "Optional log file path relative to the current working directory or absolute."
     },
     "stateFilePath": {
       "type": "string",
-      "default": "data/state.json"
+      "default": "~/.local/share/gas-notify/state.json"
     },
     "notifyOnRecovery": {
       "type": "boolean",
@@ -115,10 +128,6 @@
     "notifyOnRpcFailover": {
       "type": "boolean",
       "default": true
-    },
-    "snoreToastPath": {
-      "type": "string",
-      "default": "vendor/SnoreToast.exe"
     }
   },
   "$defs": {

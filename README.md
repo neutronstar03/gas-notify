@@ -1,125 +1,133 @@
 # Gas Notify
 
-Windows-first Bun notifier for Ethereum `baseFeePerGas` threshold crossings.
+Windows-first Bun CLI for Ethereum `baseFeePerGas` threshold notifications.
 
-## Features
+## Status
 
-- primary WebSocket listening with `eth_subscribe` on `newHeads`
-- HTTP polling fallback when all configured WebSocket RPCs fail
-- stateful threshold crossing logic with cooldown and optional hysteresis
-- native Windows toast notifications through `SnoreToast.exe`
-- simple JSON config, persistent state, file logging, and startup helpers
-- RPC validation script for user-supplied and DefiLlama-sourced candidates
+- local Bun CLI with `gas-notify`, `gas-notify init`, and `gas-notify notify`
+- WebSocket-first monitoring with HTTP fallback
+- native Windows toasts via `toasted-notifier`
+- user-local runtime files under `~/.local/share/gas-notify`
+- linted with ESLint and checked with TypeScript
 
-## Requirements
+## Commands
 
-- Windows user session
-- Bun `1.3+`
-- PowerShell for helper scripts
-- a local `SnoreToast.exe` copy in `vendor/SnoreToast.exe` or another configured path
+```bash
+gas-notify
+gas-notify init
+gas-notify notify
+```
 
-## Setup
+- `gas-notify`: run the monitor
+- `gas-notify init`: create default config and schema in the user-local app directory
+- `gas-notify notify`: send a demo toast to verify native toast support
+
+## Local Linking
+
+This project is aimed at local personal use.
+
+Register the CLI locally:
 
 ```bash
 bun install
+bun link
 ```
 
-The tracked `config/config.json` is intentionally minimal. Use `config/example.config.json` as a fuller reference, or keep your own overrides in a file like `config/dev.local.json` and launch with `GAS_NOTIFY_CONFIG`.
-
-`config/config.json` and `config/example.config.json` both point at `config/config.schema.json`, so editors with JSON Schema support should give you autocomplete and validation.
-
-Threshold hysteresis defaults to `5%` of the threshold value, so you usually do not need to specify it. You can still override it with either `hysteresisPercent` or `hysteresisGwei`.
-
-Provision SnoreToast:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\provision-snoretoast.ps1
-```
-
-If the script cannot auto-download a binary, place `SnoreToast.exe` manually in `vendor\SnoreToast.exe`. Upstream currently publishes source archives more reliably than a direct Windows binary asset.
-
-## Configuration
-
-Edit `config/config.json`.
-
-Single-threshold mode is supported with `thresholdGwei`, but the default example uses multiple named thresholds because it is more useful for desktop monitoring.
-
-Important keys:
-
-- `thresholds`: array of named thresholds with `gwei`, `direction`, optional `hysteresisPercent` or `hysteresisGwei`, `cooldownSeconds`, and `message`
-- `preferredRpcs`: WebSocket endpoints used for primary listening
-- `fallbackRpcs`: HTTP endpoints used for polling fallback
-- `silentNotifications`: pass `-silent` to SnoreToast
-- `stateFilePath`: stores last threshold positions and last notification times
-- `logFilePath`: optional rolling append-only log file location
-
-Environment overrides are supported for the main top-level settings, including:
-
-- `GAS_NOTIFY_CONFIG`
-- `GAS_NOTIFY_THRESHOLD_GWEI`
-- `GAS_NOTIFY_DIRECTION`
-- `GAS_NOTIFY_COOLDOWN_SECONDS`
-- `GAS_NOTIFY_HTTP_POLL_INTERVAL_MS`
-- `GAS_NOTIFY_SNORETOAST_PATH`
-
-## Run
+Then use it from anywhere:
 
 ```bash
+gas-notify init
+gas-notify notify
+gas-notify
+```
+
+## Where Files Live
+
+By default, runtime files live in `~/.local/share/gas-notify`.
+
+- config: `~/.local/share/gas-notify/config.json`
+- schema: `~/.local/share/gas-notify/config.schema.json`
+- state: `~/.local/share/gas-notify/state.json`
+- logs: `~/.local/share/gas-notify/logs/gas-notify.log`
+- You can override the root with `GAS_NOTIFY_HOME`, or override the config file directly with `GAS_NOTIFY_CONFIG`.
+
+## Notifications
+
+Notifications use `toasted-notifier` for the visible Windows toast.
+
+There is no separate install step for a notification helper binary.
+
+The project bundles `assets/notification-ping.mp3` and plays it separately by default, since toast sound behavior is more reliable this way.
+It also bundles `assets/ethereum-icon.png` and uses it as the Windows toast icon by default.
+
+## Init Behavior
+
+`gas-notify init` creates a default config with:
+
+- one default threshold
+- Ethereum mainnet WS and HTTP RPC defaults
+- a schema file next to the generated config
+
+Default threshold:
+
+```json
+{
+  "name": "default",
+  "gwei": 0.06,
+  "direction": "below",
+  "message": "Transact on mainnet is now cheap"
+}
+```
+
+Hysteresis defaults to `5%` of the threshold value, so you usually do not need to specify it.
+
+Notifications are silent by default. Set `"silentNotifications": false` in `config.json` if you want the default Windows toast sound instead.
+The bundled custom sound is controlled separately and defaults to enabled via `"playNotificationSound": true`.
+
+## Config Notes
+
+- use `thresholds[]` for normal operation; `thresholdGwei` still works as shorthand
+- `hysteresisGwei` overrides percentage-based hysteresis when both could apply
+- `state.json` stores runtime threshold state only; it does not duplicate threshold definitions from config
+- the persisted state key is `thresholdState`
+
+Repo reference files are available in `config/example.config.json` and `config/config.schema.json`.
+
+## Run From Repo
+
+If you do not want to link the CLI yet:
+
+```bash
+bun run start init
+bun run start notify
 bun run start
-```
-
-Development watch mode:
-
-```bash
-bun run dev
 ```
 
 ## Validate RPCs
 
-The validator checks:
-
-- WebSocket connect
-- `eth_subscribe` support on `newHeads`
-- block fetch success
-- presence of `baseFeePerGas`
-
-Run with built-in DefiLlama candidates and optional extra URLs:
-
 ```bash
 bun run validate:rpcs
-GAS_NOTIFY_RPC_LIST="wss://ethereum-rpc.publicnode.com,https://ethereum-rpc.publicnode.com" bun run validate:rpcs
-```
-
-Skip DefiLlama candidate ingestion:
-
-```bash
 bun run validate:rpcs --skip-defillama
 ```
 
-## Startup on Login
+RPC discovery in this project also builds on [DefiLlama chainlist](https://github.com/DefiLlama/chainlist) data. Huge thanks to the DefiLlama team for the quality and usefulness of their public infra work.
 
-Create a scheduled task and startup shortcut:
+Optional extra RPCs:
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\install-startup.ps1 -Mode Both
+```bash
+GAS_NOTIFY_RPC_LIST="wss://ethereum-rpc.publicnode.com,https://ethereum-rpc.publicnode.com" bun run validate:rpcs
 ```
 
-Modes:
+## Development
 
-- `TaskScheduler`
-- `StartupShortcut`
-- `Both`
-
-## Logging and State
-
-- console logs are always enabled and timestamped
-- file logging is enabled when `logFilePath` is set
-- state is written to `data/state.json` by default
-- if SnoreToast is missing or fails, the app logs the notification attempt and keeps running
+```bash
+bun run lint
+bun run check
+```
 
 ## Troubleshooting
 
+- if `gas-notify` says config is missing, run `gas-notify init`
+- if `gas-notify notify` fails, confirm Windows notifications are enabled for your user session
 - if WebSocket providers flap, confirm the validator still reports them in `ws_confirmed`
-- if no toast appears, verify `vendor/SnoreToast.exe` exists and launch the app inside your user session
 - if only polling works, keep HTTP endpoints configured and let the app retry WebSocket automatically
-- if startup registration fails, run PowerShell as the same desktop user that should receive toasts

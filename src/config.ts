@@ -1,8 +1,10 @@
 import type { Logger } from './logging/logger'
 import type { AppConfig, Direction, RpcEndpoint, RpcEndpointInput, ThresholdInput, ThresholdRule } from './types'
 import fs from 'node:fs'
+import path from 'node:path'
 import process from 'node:process'
-import { isWsUrl, relativeOrAbsolutePath, resolveFromRoot } from './utils'
+import { getAppPaths } from './paths'
+import { isWsUrl, relativeOrAbsolutePath } from './utils'
 
 type RawConfig = Partial<Omit<AppConfig, 'configPath' | 'thresholds' | 'preferredRpcs' | 'fallbackRpcs'>> & {
   thresholdGwei?: number
@@ -14,12 +16,17 @@ type RawConfig = Partial<Omit<AppConfig, 'configPath' | 'thresholds' | 'preferre
   fallbackRpcs?: RpcEndpointInput[]
 }
 
-const DEFAULT_CONFIG_PATH = resolveFromRoot('config', 'config.json')
+const DEFAULT_CONFIG_PATH = getAppPaths().configPath
+const DEFAULT_NOTIFICATION_ICON_PATH = path.resolve(import.meta.dir, '..', 'assets', 'ethereum-icon.png')
+const DEFAULT_NOTIFICATION_SOUND_PATH = path.resolve(import.meta.dir, '..', 'assets', 'notification-ping.mp3')
 
 const DEFAULTS = {
-  notificationTitle: 'Ethereum Base Fee',
-  appId: 'GasNotify.BaseFee',
-  silentNotifications: false,
+  notificationTitle: 'Gas Notify',
+  appId: 'Gas Notify',
+  notificationIconPath: DEFAULT_NOTIFICATION_ICON_PATH,
+  silentNotifications: true,
+  playNotificationSound: true,
+  notificationSoundPath: DEFAULT_NOTIFICATION_SOUND_PATH,
   cooldownSeconds: 180,
   reconnectBaseDelayMs: 2000,
   reconnectMaxDelayMs: 30000,
@@ -31,8 +38,8 @@ const DEFAULTS = {
   notifyOnRpcFailover: true,
   hysteresisPercent: 5,
   logLevel: 'info' as const,
-  stateFilePath: 'data/state.json',
-  snoreToastPath: 'vendor/SnoreToast.exe',
+  stateFilePath: getAppPaths().statePath,
+  logFilePath: getAppPaths().logPath,
 }
 
 const ENV_NUMBER_KEYS = {
@@ -49,14 +56,16 @@ const ENV_STRING_KEYS = {
   GAS_NOTIFY_DIRECTION: 'direction',
   GAS_NOTIFY_NOTIFICATION_TITLE: 'notificationTitle',
   GAS_NOTIFY_APP_ID: 'appId',
+  GAS_NOTIFY_NOTIFICATION_ICON_PATH: 'notificationIconPath',
   GAS_NOTIFY_LOG_LEVEL: 'logLevel',
   GAS_NOTIFY_LOG_FILE: 'logFilePath',
+  GAS_NOTIFY_NOTIFICATION_SOUND_PATH: 'notificationSoundPath',
   GAS_NOTIFY_STATE_FILE: 'stateFilePath',
-  GAS_NOTIFY_SNORETOAST_PATH: 'snoreToastPath',
 } as const satisfies Record<string, keyof RawConfig>
 
 const ENV_BOOLEAN_KEYS = {
   GAS_NOTIFY_SILENT: 'silentNotifications',
+  GAS_NOTIFY_PLAY_NOTIFICATION_SOUND: 'playNotificationSound',
   GAS_NOTIFY_NOTIFY_ON_STARTUP: 'notifyOnStartupState',
   GAS_NOTIFY_NOTIFY_ON_RECOVERY: 'notifyOnRecovery',
   GAS_NOTIFY_NOTIFY_ON_RPC_FAILOVER: 'notifyOnRpcFailover',
@@ -87,7 +96,10 @@ export function loadConfig(): AppConfig {
   return {
     notificationTitle: merged.notificationTitle ?? DEFAULTS.notificationTitle,
     appId: merged.appId ?? DEFAULTS.appId,
+    notificationIconPath: merged.notificationIconPath ? relativeOrAbsolutePath(merged.notificationIconPath) : DEFAULTS.notificationIconPath,
     silentNotifications: merged.silentNotifications ?? DEFAULTS.silentNotifications,
+    playNotificationSound: merged.playNotificationSound ?? DEFAULTS.playNotificationSound,
+    notificationSoundPath: merged.notificationSoundPath ? relativeOrAbsolutePath(merged.notificationSoundPath) : DEFAULTS.notificationSoundPath,
     cooldownSeconds: merged.cooldownSeconds ?? DEFAULTS.cooldownSeconds,
     reconnectBaseDelayMs: merged.reconnectBaseDelayMs ?? DEFAULTS.reconnectBaseDelayMs,
     reconnectMaxDelayMs: merged.reconnectMaxDelayMs ?? DEFAULTS.reconnectMaxDelayMs,
@@ -99,9 +111,8 @@ export function loadConfig(): AppConfig {
     notifyOnRpcFailover: merged.notifyOnRpcFailover ?? DEFAULTS.notifyOnRpcFailover,
     logLevel: merged.logLevel ?? DEFAULTS.logLevel,
     configPath,
-    logFilePath: merged.logFilePath ? relativeOrAbsolutePath(merged.logFilePath) : undefined,
+    logFilePath: merged.logFilePath ? relativeOrAbsolutePath(merged.logFilePath) : DEFAULTS.logFilePath,
     stateFilePath: relativeOrAbsolutePath(merged.stateFilePath ?? DEFAULTS.stateFilePath),
-    snoreToastPath: merged.snoreToastPath ? relativeOrAbsolutePath(merged.snoreToastPath) : undefined,
     thresholds,
     preferredRpcs,
     fallbackRpcs,
@@ -112,7 +123,11 @@ export function logConfigSummary(logger: Logger, config: AppConfig): void {
   logger.info('Configuration loaded', {
     configPath: config.configPath,
     notificationTitle: config.notificationTitle,
+    appId: config.appId,
+    notificationIconPath: config.notificationIconPath,
     silentNotifications: config.silentNotifications,
+    playNotificationSound: config.playNotificationSound,
+    notificationSoundPath: config.notificationSoundPath,
     cooldownSeconds: config.cooldownSeconds,
     reconnectBaseDelayMs: config.reconnectBaseDelayMs,
     reconnectMaxDelayMs: config.reconnectMaxDelayMs,
@@ -125,7 +140,6 @@ export function logConfigSummary(logger: Logger, config: AppConfig): void {
     thresholdNames: config.thresholds.map(threshold => threshold.name),
     preferredRpcs: config.preferredRpcs.map(rpc => rpc.name),
     fallbackRpcs: config.fallbackRpcs.map(rpc => rpc.name),
-    snoreToastConfigured: Boolean(config.snoreToastPath),
   })
 }
 
