@@ -120,7 +120,10 @@ export function loadConfig(): AppConfig {
 }
 
 export function logConfigSummary(logger: Logger, config: AppConfig): void {
-  logger.info('Configuration loaded', {
+  logger.info(
+    `Configuration found, ${config.thresholds.length} ${pluralize(config.thresholds.length, 'threshold')} registered`,
+  )
+  logger.debug('Resolved configuration', {
     configPath: config.configPath,
     notificationTitle: config.notificationTitle,
     appId: config.appId,
@@ -141,6 +144,10 @@ export function logConfigSummary(logger: Logger, config: AppConfig): void {
     preferredRpcs: config.preferredRpcs.map(rpc => rpc.name),
     fallbackRpcs: config.fallbackRpcs.map(rpc => rpc.name),
   })
+}
+
+function pluralize(count: number, noun: string): string {
+  return count === 1 ? noun : `${noun}s`
 }
 
 function applyEnvOverrides(config: RawConfig): RawConfig {

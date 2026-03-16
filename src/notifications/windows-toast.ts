@@ -47,7 +47,8 @@ export class WindowsToastNotifier {
           return
         }
 
-        this.logger.info('Toast notification sent', {
+        this.logger.info(`Toast sent for threshold ${event.threshold.name}`)
+        this.logger.debug('Toast notification sent', {
           threshold: event.threshold.name,
           baseFeeGwei: event.observation.baseFeeGwei,
           blockNumber: event.observation.blockNumber.toString(),

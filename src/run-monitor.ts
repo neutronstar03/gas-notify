@@ -19,7 +19,10 @@ export async function runMonitor(): Promise<void> {
     async (observation) => {
       const events = evaluator.evaluate(observation)
       for (const event of events) {
-        logger.info('Threshold event emitted', {
+        logger.info(
+          `Threshold ${event.threshold.name} crossed ${event.crossedTo} at ${event.observation.baseFeeGwei} gwei`,
+        )
+        logger.debug('Threshold event emitted', {
           threshold: event.threshold.name,
           crossedTo: event.crossedTo,
           previousPosition: event.previousPosition,
@@ -29,13 +32,6 @@ export async function runMonitor(): Promise<void> {
           reason: event.reason,
         })
         await notifier.notify(event)
-      }
-      if (events.length === 0) {
-        logger.debug('No notification emitted', {
-          blockNumber: observation.blockNumber.toString(),
-          baseFeeGwei: observation.baseFeeGwei,
-          provider: observation.providerName,
-        })
       }
       stateStore.save(evaluator.snapshot())
       return events

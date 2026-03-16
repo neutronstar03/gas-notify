@@ -44,7 +44,7 @@ export class BlockListener {
 
   private async runWsProvider(provider: RpcEndpoint): Promise<boolean> {
     const client = new WsRpcClient(provider.url, this.config.rpcRequestTimeoutMs)
-    this.logger.info('Connecting WebSocket RPC', { provider: provider.name, url: provider.url })
+    this.logger.info(`Connecting to WebSocket RPC [${provider.name}]: ${provider.url}`)
 
     try {
       await client.connect()
@@ -66,10 +66,10 @@ export class BlockListener {
     }
     catch (error) {
       const message = ensureError(error).message
-      this.logger.warn('WebSocket provider failed', { provider: provider.name, message })
+      this.logger.warn(`WebSocket RPC [${provider.name}] failed: ${message}`)
       const nextProvider = this.providerPool.rotateWs()
       if (this.config.notifyOnRpcFailover && nextProvider && nextProvider.name !== provider.name) {
-        this.logger.info('Rotating to next WebSocket provider', { from: provider.name, to: nextProvider.name })
+        this.logger.info(`Switching WebSocket RPC from [${provider.name}] to [${nextProvider.name}]`)
       }
       await sleep(this.wsReconnectDelayMs)
       this.wsReconnectDelayMs = Math.min(this.wsReconnectDelayMs * 2, this.config.reconnectMaxDelayMs)
@@ -89,7 +89,7 @@ export class BlockListener {
     }
 
     const client = new HttpRpcClient(provider.url, this.config.rpcRequestTimeoutMs)
-    this.logger.warn('HTTP fallback active', { provider: provider.name, url: provider.url })
+    this.logger.warn(`WebSocket unavailable, using HTTP fallback [${provider.name}]: ${provider.url}`)
 
     while (!this.stopRequested) {
       try {
@@ -98,10 +98,10 @@ export class BlockListener {
         await this.processBlock(block, provider, 'http')
       }
       catch (error) {
-        this.logger.warn('HTTP polling failed', { provider: provider.name, message: ensureError(error).message })
+        this.logger.warn(`HTTP RPC [${provider.name}] failed: ${ensureError(error).message}`)
         const nextProvider = this.providerPool.rotateHttp()
         if (nextProvider && nextProvider.name !== provider.name) {
-          this.logger.info('Rotating to next HTTP provider', { from: provider.name, to: nextProvider.name })
+          this.logger.info(`Switching HTTP RPC from [${provider.name}] to [${nextProvider.name}]`)
         }
         break
       }
@@ -109,7 +109,7 @@ export class BlockListener {
       const now = Date.now()
       if (now - this.lastWsRetryAt >= this.config.wsRetryWhilePollingMs && this.providerPool.currentWs()) {
         this.lastWsRetryAt = now
-        this.logger.info('Retrying WebSocket mode from HTTP fallback')
+        this.logger.info('Retrying WebSocket connection')
         return
       }
 
@@ -132,18 +132,17 @@ export class BlockListener {
       mode,
     }
 
-    this.logger.debug('Observed base fee', {
-      provider: provider.name,
-      mode,
-      blockNumber: observation.blockNumber.toString(),
-      baseFeeGwei: formatGwei(observation.baseFeeGwei),
-    })
+    this.logger.debug(
+      `Observed base fee ${formatGwei(observation.baseFeeGwei)} gwei at block ${observation.blockNumber.toString()} via ${mode.toUpperCase()} [${provider.name}]`,
+    )
     await this.onObservation(observation)
   }
 
   private markHealthy(mode: 'ws' | 'http', provider: RpcEndpoint): void {
     if (this.lastHealthyMode !== mode && this.config.notifyOnRecovery) {
-      this.logger.info('Transport mode active', { mode, provider: provider.name })
+      this.logger.info(mode === 'ws'
+        ? `Live WebSocket monitoring active via [${provider.name}]`
+        : `HTTP polling active via [${provider.name}]`)
     }
     this.lastHealthyMode = mode
   }
