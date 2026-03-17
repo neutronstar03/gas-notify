@@ -62,7 +62,7 @@ export class BlockListener {
       })
 
       const closed = await client.waitForClose()
-      throw new Error(`WebSocket closed ${closed.code} ${closed.reason}`)
+      throw client.getTerminalError() ?? new Error(`WebSocket closed ${closed.code} ${closed.reason}`)
     }
     catch (error) {
       const message = ensureError(error).message

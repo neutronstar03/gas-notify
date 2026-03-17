@@ -24,6 +24,7 @@ let nextRequestId = 1
 export class WsRpcClient {
   private socket?: WebSocket
   private subscriptionId?: string
+  private terminalError?: Error
   private readonly pending = new Map<number, { resolve: (value: unknown) => void, reject: (error: Error) => void }>()
   private readonly closeWaiters: Array<(event: CloseEvent) => void> = []
 
@@ -37,6 +38,7 @@ export class WsRpcClient {
       return
     }
 
+    this.terminalError = undefined
     this.socket = new WebSocket(this.url)
     await new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error(`WebSocket open timeout after ${this.timeoutMs}ms`)), this.timeoutMs)
@@ -58,7 +60,8 @@ export class WsRpcClient {
 
       socket.onclose = (event) => {
         clearTimeout(timer)
-        this.rejectAllPending(new Error(`WebSocket closed (${event.code}) ${event.reason || 'no reason'}`))
+        this.terminalError ??= new Error(`WebSocket closed (${event.code}) ${event.reason || 'no reason'}`)
+        this.rejectAllPending(this.terminalError)
         while (this.closeWaiters.length > 0) {
           this.closeWaiters.shift()?.(event)
         }
@@ -71,17 +74,8 @@ export class WsRpcClient {
     this.subscriptionId = subscription
 
     const socket = this.requireSocket()
-    socket.onmessage = async (event) => {
-      const payload = this.parseMessage(String(event.data))
-      if (payload.id !== undefined) {
-        this.resolvePending(payload)
-        return
-      }
-
-      const isHeadEvent = payload.method === 'eth_subscription' && payload.params?.subscription === this.subscriptionId
-      if (isHeadEvent) {
-        await onHead((payload.params?.result ?? {}) as HeadPayload)
-      }
+    socket.onmessage = (event) => {
+      void this.handleSubscriptionMessage(String(event.data), onHead)
     }
   }
 
@@ -139,6 +133,10 @@ export class WsRpcClient {
     }
   }
 
+  getTerminalError(): Error | undefined {
+    return this.terminalError
+  }
+
   private requireSocket(): WebSocket {
     if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
       throw new Error('WebSocket is not connected')
@@ -158,6 +156,24 @@ export class WsRpcClient {
   private handleMessage(raw: string): void {
     const payload = this.parseMessage(raw)
     this.resolvePending(payload)
+  }
+
+  private async handleSubscriptionMessage(raw: string, onHead: (head: HeadPayload) => Promise<void> | void): Promise<void> {
+    try {
+      const payload = this.parseMessage(raw)
+      if (payload.id !== undefined) {
+        this.resolvePending(payload)
+        return
+      }
+
+      const isHeadEvent = payload.method === 'eth_subscription' && payload.params?.subscription === this.subscriptionId
+      if (isHeadEvent) {
+        await onHead((payload.params?.result ?? {}) as HeadPayload)
+      }
+    }
+    catch (error) {
+      this.failConnection(ensureError(error))
+    }
   }
 
   private resolvePending(payload: JsonRpcMessage): void {
@@ -183,5 +199,13 @@ export class WsRpcClient {
       pending.reject(error)
     }
     this.pending.clear()
+  }
+
+  private failConnection(error: Error): void {
+    this.terminalError ??= error
+    this.rejectAllPending(this.terminalError)
+    if (this.socket && this.socket.readyState < WebSocket.CLOSING) {
+      this.socket.close()
+    }
   }
 }
