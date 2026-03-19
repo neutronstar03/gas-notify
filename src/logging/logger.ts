@@ -41,12 +41,17 @@ export class Logger {
     return new ScopedLogger(this, scope)
   }
 
-  private write(level: LogLevel, message: string, meta?: unknown): void {
+  writeScoped(level: LogLevel, scope: string, message: string, meta?: unknown): void {
+    this.write(level, message, meta, scope)
+  }
+
+  private write(level: LogLevel, message: string, meta?: unknown, scope?: string): void {
     if (levelOrder[level] < levelOrder[this.level]) {
       return
     }
 
-    const line = `${timestampLine()} [${level.toUpperCase()}] ${message}${meta === undefined ? '' : ` ${safeJson(meta)}`}`
+    const tag = scope ? `[${level.toUpperCase()}:${scope}]` : `[${level.toUpperCase()}]`
+    const line = `${timestampLine()} ${tag} ${message}${meta === undefined ? '' : ` ${safeJson(meta)}`}`
     const target = level === 'error' ? process.stderr : level === 'warn' ? process.stderr : process.stdout
     target.write(`${line}\n`)
 
@@ -63,19 +68,19 @@ export class ScopedLogger {
   ) {}
 
   debug(message: string, meta?: unknown): void {
-    this.logger.debug(`[${this.scope}] ${message}`, meta)
+    this.logger.writeScoped('debug', this.scope, message, meta)
   }
 
   info(message: string, meta?: unknown): void {
-    this.logger.info(`[${this.scope}] ${message}`, meta)
+    this.logger.writeScoped('info', this.scope, message, meta)
   }
 
   warn(message: string, meta?: unknown): void {
-    this.logger.warn(`[${this.scope}] ${message}`, meta)
+    this.logger.writeScoped('warn', this.scope, message, meta)
   }
 
   error(message: string, meta?: unknown): void {
-    this.logger.error(`[${this.scope}] ${message}`, meta)
+    this.logger.writeScoped('error', this.scope, message, meta)
   }
 }
 

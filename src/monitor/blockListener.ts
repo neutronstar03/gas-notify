@@ -133,7 +133,7 @@ export class BlockListener {
     }
 
     this.logger.debug(
-      `Observed base fee ${formatGwei(observation.baseFeeGwei)} gwei at block ${observation.blockNumber.toString()} via ${mode.toUpperCase()} [${provider.name}]`,
+      `${provider.name}: block ${observation.blockNumber.toString()} - base fee ${formatGwei(observation.baseFeeGwei)} gwei`,
     )
     await this.onObservation(observation)
   }
