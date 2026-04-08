@@ -1,0 +1,141 @@
+#gas-notify-root {
+  all: initial;
+}
+
+#gas-notify-root * {
+  box-sizing: border-box;
+  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+}
+
+.gas-notify-widget {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483647;
+  width: 232px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(16, 18, 24, 0.96);
+  color: #f8fafc;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.gas-notify-widget--dragging,
+.gas-notify-widget__dragbar {
+  cursor: grabbing;
+}
+
+.gas-notify-widget__dragbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px 7px;
+  cursor: grab;
+  background: linear-gradient(180deg, rgba(124, 255, 175, 0.12), rgba(124, 255, 175, 0));
+}
+
+.gas-notify-widget__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gas-notify-widget__badge {
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(124, 255, 175, 0.14);
+  font-size: 11px;
+}
+
+.gas-notify-widget__copy {
+  min-width: 0;
+}
+
+.gas-notify-widget__copy strong {
+  display: block;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.gas-notify-widget__copy span {
+  display: block;
+  color: #94a3b8;
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gas-notify-widget__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
+  flex: none;
+}
+
+.gas-notify-widget__status-dot[data-mode='ws'] {
+  background: #7cffaf;
+  box-shadow: 0 0 12px rgba(124, 255, 175, 0.45);
+}
+
+.gas-notify-widget__status-dot[data-mode='http'] {
+  background: #fbbf24;
+}
+
+.gas-notify-widget__status-dot[data-mode='down'] {
+  background: #fb7185;
+}
+
+.gas-notify-widget__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 8px;
+}
+
+.gas-notify-widget__row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 8px;
+  align-items: baseline;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gas-notify-widget__row--latest {
+  background: rgba(124, 255, 175, 0.12);
+}
+
+.gas-notify-widget__block,
+.gas-notify-widget__age {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.gas-notify-widget__fee {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.gas-notify-widget__footer {
+  padding: 0 10px 10px;
+  color: #94a3b8;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.gas-notify-widget__empty {
+  padding: 4px 0 2px;
+}

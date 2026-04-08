@@ -125,6 +125,50 @@ bun run lint
 bun run check
 ```
 
+## Chrome Extension Experiment
+
+There is also an unpacked-extension experiment on branch `experiment/chrome-extension`.
+
+Current interaction model:
+
+- click the extension action icon to toggle a sticky gas overlay on the current page
+- click again to hide it
+- the overlay is meant for quick glances while doing transactions
+
+To load it locally in Chrome:
+
+```bash
+bun run extension:build
+```
+
+1. open `chrome://extensions`
+2. enable **Developer mode**
+3. click **Load unpacked**
+4. select the `dist-extension/` folder from this repo
+
+Rebuild after source changes:
+
+```bash
+bun run extension:build
+```
+
+Optional watch mode:
+
+```bash
+bun run extension:watch
+```
+
+Then click **Reload** for the extension in `chrome://extensions`, and refresh the target page.
+
+Notes:
+
+- no Chrome Web Store publishing is required for local use
+- Chrome will show unpacked/developer warnings; that is expected
+- protected pages like `chrome://*` and the Chrome Web Store will not support the overlay
+- extension source lives in `src/`
+- Vite outputs the unpacked loadable build to `dist-extension/`
+- legacy CLI code is parked under `legacy-shell/` on this branch
+
 ## Troubleshooting
 
 - if `gas-notify` says config is missing, run `gas-notify init`

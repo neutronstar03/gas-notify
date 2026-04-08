@@ -5,12 +5,12 @@
     "module": "Preserve",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
-    "types": ["bun-types"],
+    "types": ["bun-types", "vite/client", "chrome"],
     "allowJs": false,
     "strict": true,
     "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts"]
+  "include": ["src/**/*.ts", "legacy-shell/**/*.ts", "scripts/**/*.ts", "vite.extension.config.ts"]
 }

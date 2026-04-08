@@ -1,8 +1,8 @@
-import type { BlockData, RpcEndpointInput } from '../src/types'
+import type { BlockData, RpcEndpointInput } from '../legacy-shell/types'
 import process from 'node:process'
-import { HttpRpcClient } from '../src/rpc/httpClient'
-import { WsRpcClient } from '../src/rpc/wsClient'
-import { ensureError, formatGwei, isWsUrl, weiHexToGwei } from '../src/utils'
+import { HttpRpcClient } from '../legacy-shell/rpc/httpClient'
+import { WsRpcClient } from '../legacy-shell/rpc/wsClient'
+import { ensureError, formatGwei, isWsUrl, weiHexToGwei } from '../legacy-shell/utils'
 
 const DEFILLAMA_EXTRA_RPCS_RAW = 'https://raw.githubusercontent.com/DefiLlama/chainlist/main/constants/extraRpcs.js'
 const ETHEREUM_SECTION_PATTERN = /1:\s*\{[\s\S]*?rpcs:\s*\[(.*?)\]\s*,\s*privacyData/s

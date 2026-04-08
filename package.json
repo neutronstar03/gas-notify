@@ -4,11 +4,13 @@
   "version": "1.0.4",
   "private": true,
   "bin": {
-    "gas-notify": "./src/cli.ts"
+    "gas-notify": "./legacy-shell/cli.ts"
   },
   "scripts": {
-    "start": "bun run src/cli.ts",
-    "dev": "bun --watch run src/cli.ts",
+    "start": "bun run legacy-shell/cli.ts",
+    "dev": "bun --watch run legacy-shell/cli.ts",
+    "extension:build": "bunx vite build --config vite.extension.config.ts",
+    "extension:watch": "bunx vite build --watch --config vite.extension.config.ts",
     "check": "bunx tsc --noEmit",
     "validate:rpcs": "bun run scripts/validate-rpcs.ts",
     "lint": "eslint .",
@@ -20,7 +22,9 @@
   "devDependencies": {
     "@antfu/eslint-config": "^7.7.2",
     "@types/bun": "latest",
+    "@types/chrome": "^0.1.39",
     "eslint": "^10.0.3",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vite": "^8.0.7"
   }
 }
