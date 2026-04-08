@@ -1,5 +1,5 @@
 import type { BlockData } from '../types'
-import { ensureError } from '../utils'
+import { ensureError } from '../shared/core'
 
 interface JsonRpcMessage {
   id?: number

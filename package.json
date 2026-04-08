@@ -9,18 +9,25 @@
   "scripts": {
     "start": "bun run src/cli.ts",
     "dev": "bun --watch run src/cli.ts",
+    "desktop:frontend": "bunx vite dev",
+    "desktop:build:ui": "bunx vite build",
+    "desktop:dev": "bunx tauri dev",
+    "desktop:build": "bunx tauri build",
     "check": "bunx tsc --noEmit",
     "validate:rpcs": "bun run scripts/validate-rpcs.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.10.1",
     "toasted-notifier": "^10.1.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^7.7.2",
+    "@tauri-apps/cli": "^2.10.1",
     "@types/bun": "latest",
     "eslint": "^10.0.3",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vite": "^8.0.7"
   }
 }

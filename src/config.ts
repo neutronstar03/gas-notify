@@ -4,7 +4,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { getAppPaths } from './paths'
-import { isWsUrl, relativeOrAbsolutePath } from './utils'
+import { isWsUrl } from './shared/core'
+import { relativeOrAbsolutePath } from './utils'
 
 type RawConfig = Partial<Omit<AppConfig, 'configPath' | 'thresholds' | 'preferredRpcs' | 'fallbackRpcs'>> & {
   thresholdGwei?: number

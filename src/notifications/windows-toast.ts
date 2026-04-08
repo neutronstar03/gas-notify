@@ -1,7 +1,7 @@
 import type { ScopedLogger } from '../logging/logger'
 import type { AppConfig, NotificationEvent } from '../types'
 import { createRequire } from 'node:module'
-import { formatGwei } from '../utils'
+import { formatGwei } from '../shared/core'
 import { playNotificationSound } from './play-sound'
 
 const require = createRequire(import.meta.url)

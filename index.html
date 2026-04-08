@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gas Notify Tray</title>
+    <script type="module" src="/src-app/main.ts"></script>
+  </head>
+  <body>
+    <main id="widget-shell" class="widget-shell">
+      <header class="widget-header">
+        <div class="widget-title-group">
+          <span class="widget-badge" aria-hidden="true">⛽</span>
+          <div class="widget-title-copy">
+            <strong>Gas Notify</strong>
+            <span id="connection-status">Connecting…</span>
+          </div>
+        </div>
+        <button id="theme-toggle" class="chip-button no-drag" type="button">Playful</button>
+      </header>
+
+      <section class="widget-list" aria-label="Recent Ethereum base fee blocks">
+        <div id="rows"></div>
+      </section>
+
+      <footer class="widget-footer">
+        <span id="meta-summary">Waiting for first block…</span>
+        <button id="row-toggle" class="chip-button no-drag" type="button">3 rows</button>
+      </footer>
+    </main>
+  </body>
+  </html>

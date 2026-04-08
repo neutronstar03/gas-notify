@@ -5,12 +5,12 @@
     "module": "Preserve",
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
-    "types": ["bun-types"],
+    "types": ["bun-types", "vite/client"],
     "allowJs": false,
     "strict": true,
     "noEmit": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts"]
+  "include": ["src/**/*.ts", "src-app/**/*.ts", "scripts/**/*.ts", "vite.config.ts"]
 }

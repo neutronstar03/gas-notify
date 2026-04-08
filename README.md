@@ -1,26 +1,86 @@
 # Gas Notify
 
-Windows-first Bun CLI for Ethereum `baseFeePerGas` threshold notifications.
+Windows-first Ethereum `baseFeePerGas` monitor.
 
-## Status
+This repo currently contains:
+- a Bun CLI monitor with threshold notifications
+- an experimental Tauri tray app with a small floating desktop widget
 
-- local Bun CLI with `gas-notify`, `gas-notify init`, and `gas-notify notify`
-- WebSocket-first monitoring with HTTP fallback
-- native Windows toasts via `toasted-notifier`
-- user-local runtime files under `~/.local/share/gas-notify`
-- linted with ESLint and checked with TypeScript
+## Shortlist
 
-## Commands
+- CLI monitor: `gas-notify`
+- Tauri tray widget branch experiment: `experiment/tray-app`
+- transport: WebSocket-first with HTTP fallback
+- desktop widget: tray toggle + compact floating panel
+- notifications: Windows toast support in the CLI path
+
+## Basic Commands
+
+### Install
 
 ```bash
-gas-notify
+bun install
+```
+
+### CLI
+
+```bash
 gas-notify init
 gas-notify notify
+gas-notify
 ```
+
+Or from the repo:
+
+```bash
+bun run start init
+bun run start notify
+bun run start
+```
+
+### Tray app
+
+```bash
+bun run desktop:dev
+bun run desktop:build
+```
+
+### Development checks
+
+```bash
+bun run lint
+bun run check
+```
+
+### RPC validation
+
+```bash
+bun run validate:rpcs
+bun run validate:rpcs --skip-defillama
+```
+
+## CLI Commands
 
 - `gas-notify`: run the monitor
 - `gas-notify init`: create default config and schema in the user-local app directory
 - `gas-notify notify`: send a demo toast to verify native toast support
+
+## Tray App
+
+The Tauri experiment is a small Windows tray utility with:
+
+- left-click tray icon to show/hide the floating widget
+- right-click tray menu for show/hide, pause, resume, and quit
+- compact floating panel around 220px wide
+- live recent block base fee rows
+- playful/plain theme toggle in the widget
+- row count toggle for 2, 3, or 4 rows
+
+The desktop entrypoints are:
+
+- `bun run desktop:frontend`: run the Vite frontend only
+- `bun run desktop:dev`: run the Tauri desktop app in dev mode
+- `bun run desktop:build`: build desktop bundles
 
 ## Local Linking
 
@@ -93,16 +153,6 @@ The bundled custom sound is controlled separately and defaults to enabled via `"
 
 Repo reference files are available in `config/example.config.json` and `config/config.schema.json`.
 
-## Run From Repo
-
-If you do not want to link the CLI yet:
-
-```bash
-bun run start init
-bun run start notify
-bun run start
-```
-
 ## Validate RPCs
 
 ```bash
@@ -116,13 +166,6 @@ Optional extra RPCs:
 
 ```bash
 GAS_NOTIFY_RPC_LIST="wss://ethereum-rpc.publicnode.com,https://ethereum-rpc.publicnode.com" bun run validate:rpcs
-```
-
-## Development
-
-```bash
-bun run lint
-bun run check
 ```
 
 ## Troubleshooting

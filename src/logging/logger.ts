@@ -2,7 +2,7 @@ import type { LogLevel } from '../types'
 import fs from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
-import { ensureError, timestampLine } from '../utils'
+import { ensureError, timestampLine } from '../shared/core'
 
 const levelOrder: Record<LogLevel, number> = {
   debug: 10,

@@ -3,11 +3,13 @@ import type { AppConfig, BlockData, FeeObservation, NotificationEvent, RpcEndpoi
 import { HttpRpcClient } from '../rpc/httpClient'
 import { ProviderPool } from '../rpc/providerPool'
 import { WsRpcClient } from '../rpc/wsClient'
-import { blockHexToBigInt, ensureError, formatGwei, sleep, weiHexToGwei } from '../utils'
+import { blockHexToBigInt, ensureError, formatGwei, sleep, weiHexToGwei } from '../shared/core'
+
+type MonitorLogger = Pick<ScopedLogger, 'debug' | 'info' | 'warn' | 'error'>
 
 export class BlockListener {
   private stopRequested = false
-  private readonly logger: ScopedLogger
+  private readonly logger: MonitorLogger
   private readonly providerPool: ProviderPool
   private wsReconnectDelayMs: number
   private lastHealthyMode?: 'ws' | 'http'
@@ -16,7 +18,7 @@ export class BlockListener {
   constructor(
     private readonly config: AppConfig,
     private readonly onObservation: (observation: FeeObservation) => Promise<NotificationEvent[]>,
-    logger: ScopedLogger,
+    logger: MonitorLogger,
   ) {
     this.logger = logger
     this.providerPool = new ProviderPool(config.preferredRpcs, config.fallbackRpcs)

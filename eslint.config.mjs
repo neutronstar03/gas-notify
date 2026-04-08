@@ -7,7 +7,10 @@ export default antfu(
   {
     ignores: [
       'data/**',
+      'dist/**',
       'logs/**',
+      'src-tauri/gen/**',
+      'src-tauri/target/**',
       'vendor/**',
     ],
   },
