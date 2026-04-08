@@ -7,6 +7,7 @@
     "extension:build": "bunx vite build --config vite.extension.config.ts",
     "extension:watch": "bunx vite build --watch --config vite.extension.config.ts",
     "check": "bunx tsc --noEmit",
+    "validate:rpcs": "bun run scripts/validate-rpcs.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
   },

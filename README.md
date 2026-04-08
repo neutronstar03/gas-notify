@@ -2,6 +2,13 @@
 
 Compact Chrome extension widget for live Ethereum `baseFeePerGas` monitoring.
 
+## Demo
+
+<video src="./chrome_iCqfEw3q8h.mp4" autoplay loop muted playsinline controls width="240">
+  Your browser does not support embedded video. You can download the demo here:
+  <a href="./chrome_iCqfEw3q8h.mp4">chrome_iCqfEw3q8h.mp4</a>
+</video>
+
 ## What it does
 
 - click the extension action icon to open a small standalone gas widget window
@@ -17,6 +24,7 @@ bun install
 bun run lint
 bun run check
 bun run extension:build
+bun run validate:rpcs
 ```
 
 Optional watch mode:
@@ -43,6 +51,21 @@ After source changes:
 - Chrome will show unpacked/developer warnings; that is expected
 - source lives in `src/`
 - Vite outputs the loadable extension bundle to `dist-extension/`
+
+## Validate RPCs
+
+```bash
+bun run validate:rpcs
+bun run validate:rpcs --skip-defillama
+```
+
+Optional custom candidate list:
+
+```bash
+GAS_NOTIFY_RPC_LIST="wss://ethereum-rpc.publicnode.com,https://ethereum-rpc.publicnode.com" bun run validate:rpcs
+```
+
+The validator prints JSON grouped into `ws_confirmed`, `http_confirmed`, and `rejected`.
 
 ## Versioning
 
