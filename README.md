@@ -4,9 +4,9 @@ Compact Chrome extension widget for live Ethereum `baseFeePerGas` monitoring.
 
 ## Demo
 
-<video src="./chrome_iCqfEw3q8h.mp4" autoplay loop muted playsinline controls width="240">
+<video src="https://github.com/user-attachments/assets/e315978f-cb2b-4a85-aca1-de99add64db8" autoplay loop muted playsinline controls width="240">
   Your browser does not support embedded video. You can download the demo here:
-  <a href="./chrome_iCqfEw3q8h.mp4">chrome_iCqfEw3q8h.mp4</a>
+  <a href="https://github.com/user-attachments/assets/e315978f-cb2b-4a85-aca1-de99add64db8">Gas Notify demo video</a>
 </video>
 
 ## What it does
