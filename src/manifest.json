@@ -1,25 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Gas Notify Overlay",
-  "description": "Private unpacked overlay for live Ethereum base fee monitoring.",
-  "version": "0.1.0",
+  "name": "Gas Notify Widget",
+  "description": "A compact Chrome widget for live Ethereum base fee monitoring.",
+  "version": "1.0.0",
   "action": {
-    "default_title": "Toggle Gas Notify overlay"
+    "default_title": "Open Gas Notify widget"
   },
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "windows"],
   "host_permissions": [
-    "<all_urls>",
     "https://ethereum-rpc.publicnode.com/*",
     "https://0xrpc.io/*"
-  ],
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle"
-    }
   ]
 }

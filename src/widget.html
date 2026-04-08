@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gas Notify</title>
+  </head>
+  <body>
+    <section class="gas-notify-widget">
+      <header class="gas-notify-widget__header">
+        <div class="gas-notify-widget__title">
+          <span class="gas-notify-widget__badge">⛽</span>
+          <div class="gas-notify-widget__copy">
+            <strong>Gas Notify</strong>
+            <span id="gas-notify-status">Connecting…</span>
+          </div>
+        </div>
+        <span id="gas-notify-dot" class="gas-notify-widget__status-dot" data-mode="down"></span>
+      </header>
+      <div id="gas-notify-rows" class="gas-notify-widget__rows"></div>
+      <footer id="gas-notify-footer" class="gas-notify-widget__footer">Waiting for first block…</footer>
+    </section>
+    <script type="module" src="./widget.ts"></script>
+  </body>
+</html>

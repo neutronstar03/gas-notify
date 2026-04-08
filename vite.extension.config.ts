@@ -7,9 +7,15 @@ function copyManifestPlugin() {
     name: 'copy-extension-manifest',
     writeBundle() {
       const sourcePath = path.resolve(__dirname, 'src/manifest.json')
+      const packageJsonPath = path.resolve(__dirname, 'package.json')
       const targetPath = path.resolve(__dirname, 'dist-extension/manifest.json')
+      const manifest = JSON.parse(fs.readFileSync(sourcePath, 'utf8')) as Record<string, unknown>
+      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { version: string }
+
+      manifest.version = packageJson.version
+
       fs.mkdirSync(path.dirname(targetPath), { recursive: true })
-      fs.copyFileSync(sourcePath, targetPath)
+      fs.writeFileSync(targetPath, JSON.stringify(manifest, null, 2))
     },
   }
 }
@@ -18,11 +24,10 @@ export default defineConfig({
   build: {
     outDir: 'dist-extension',
     emptyOutDir: true,
-    cssCodeSplit: false,
     rollupOptions: {
       input: {
         background: path.resolve(__dirname, 'src/background.ts'),
-        content: path.resolve(__dirname, 'src/content.ts'),
+        widget: path.resolve(__dirname, 'src/widget.html'),
       },
       output: {
         entryFileNames: '[name].js',

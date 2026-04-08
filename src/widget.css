@@ -1,40 +1,44 @@
-#gas-notify-root {
-  all: initial;
-}
-
-#gas-notify-root * {
-  box-sizing: border-box;
+:root {
+  color-scheme: dark;
   font-family: Inter, "Segoe UI", system-ui, sans-serif;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
+  background: #0f1218;
+  color: #f8fafc;
+  overflow: hidden;
+}
+
+body {
+  padding: 10px;
+}
+
 .gas-notify-widget {
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 2147483647;
-  width: 232px;
+  width: 100%;
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(16, 18, 24, 0.96);
+  background: linear-gradient(180deg, rgba(20, 24, 33, 0.98), rgba(14, 17, 24, 0.98));
   color: #f8fafc;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
   overflow: hidden;
-  backdrop-filter: blur(10px);
 }
 
-.gas-notify-widget--dragging,
-.gas-notify-widget__dragbar {
-  cursor: grabbing;
-}
-
-.gas-notify-widget__dragbar {
+.gas-notify-widget__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  padding: 9px 10px 7px;
-  cursor: grab;
-  background: linear-gradient(180deg, rgba(124, 255, 175, 0.12), rgba(124, 255, 175, 0));
+  padding: 10px 11px 8px;
+  background: linear-gradient(180deg, rgba(124, 255, 175, 0.14), rgba(124, 255, 175, 0));
 }
 
 .gas-notify-widget__title {
@@ -100,7 +104,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  padding: 0 10px 8px;
+  padding: 0 10px 10px;
 }
 
 .gas-notify-widget__row {
@@ -138,4 +142,6 @@
 
 .gas-notify-widget__empty {
   padding: 4px 0 2px;
+  color: #94a3b8;
+  font-size: 11px;
 }
