@@ -1,5 +1,6 @@
 import type { BlockResponse } from './types'
 import { RPC_CONFIG } from './config'
+import { ensureError } from './utils'
 
 interface JsonRpcResponse {
   id?: number
@@ -86,32 +87,37 @@ export class WsRpcClient {
   }
 
   private async handleMessage(event: MessageEvent): Promise<void> {
-    const payload = JSON.parse(String(event.data)) as JsonRpcResponse
+    try {
+      const payload = JSON.parse(String(event.data)) as JsonRpcResponse
 
-    if (payload.id !== undefined) {
-      const waiter = this.pending.get(payload.id)
-      if (!waiter) {
+      if (payload.id !== undefined) {
+        const waiter = this.pending.get(payload.id)
+        if (!waiter) {
+          return
+        }
+
+        this.pending.delete(payload.id)
+        window.clearTimeout(waiter.timer)
+        if (payload.error) {
+          waiter.reject(new Error(payload.error.message))
+          return
+        }
+
+        waiter.resolve(payload.result)
         return
       }
 
-      this.pending.delete(payload.id)
-      window.clearTimeout(waiter.timer)
-      if (payload.error) {
-        waiter.reject(new Error(payload.error.message))
+      const isHead = payload.method === 'eth_subscription' && payload.params?.subscription === this.subscriptionId
+      const blockNumber = payload.params?.result?.number
+      if (!isHead || !blockNumber || !this.headHandler) {
         return
       }
 
-      waiter.resolve(payload.result)
-      return
+      await this.headHandler(blockNumber)
     }
-
-    const isHead = payload.method === 'eth_subscription' && payload.params?.subscription === this.subscriptionId
-    const blockNumber = payload.params?.result?.number
-    if (!isHead || !blockNumber || !this.headHandler) {
-      return
+    catch (error) {
+      console.warn('Gas Notify WebSocket message handling failed', ensureError(error))
     }
-
-    await this.headHandler(blockNumber)
   }
 
   private rejectPending(error: Error): void {

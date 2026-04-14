@@ -76,9 +76,14 @@ export class GasMonitor {
       await client.connect(provider.url)
       this.handlers.onStatus(`Subscribing via ${provider.name}`, 'down')
       await client.subscribeNewHeads(async (blockNumber) => {
-        const block = await client.getBlockByNumber(blockNumber)
-        this.handlers.onObservation(toObservation(block, provider, 'ws'))
-        this.handlers.onStatus(`Live via ${provider.name}`, 'ws')
+        try {
+          const block = await client.getBlockByNumber(blockNumber)
+          this.handlers.onObservation(toObservation(block, provider, 'ws'))
+          this.handlers.onStatus(`Live via ${provider.name}`, 'ws')
+        }
+        catch (error) {
+          this.handlers.onStatus(`WS block skipped: ${ensureError(error).message}`, 'down')
+        }
       })
 
       this.handlers.onStatus(`Subscribed via ${provider.name}`, 'ws')

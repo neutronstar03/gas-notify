@@ -1,8 +1,116 @@
+/* ============================================
+   GAS NOTIFY WIDGET - THEME SYSTEM
+   ============================================ */
+
+/* ----------------------------------------
+   CSS Variables for Theming
+   ---------------------------------------- */
 :root {
+  /* Typography */
+  --gnw-font-family: Inter, "Segoe UI", system-ui, sans-serif;
+  --gnw-font-size-base: 14px;
+  --gnw-font-size-small: 10px;
+  --gnw-font-size-medium: 11px;
+  --gnw-font-size-large: 13px;
+  --gnw-font-size-title: 11px;
+  --gnw-line-height: 1.2;
+  
+  /* Spacing */
+  --gnw-padding-body: 10px;
+  --gnw-padding-widget: 10px 11px 8px;
+  --gnw-padding-row: 6px 8px;
+  --gnw-gap-row: 6px;
+  --gnw-gap-header: 8px;
+  --gnw-gap-title: 10px;
+  
+  /* Sizing */
+  --gnw-badge-size: 18px;
+  --gnw-status-dot-size: 8px;
+  --gnw-row-grid-columns: 44px 1fr auto;
+  --gnw-border-radius: 14px;
+  --gnw-border-radius-row: 10px;
+  --gnw-border-radius-badge: 999px;
+  
+  /* Colors - Original Dark Theme */
+  --gnw-bg-body: #0f1218;
+  --gnw-bg-widget: linear-gradient(180deg, rgba(20, 24, 33, 0.98), rgba(14, 17, 24, 0.98));
+  --gnw-bg-row: rgba(255, 255, 255, 0.04);
+  --gnw-bg-row-latest: rgba(124, 255, 175, 0.12);
+  --gnw-bg-header: linear-gradient(180deg, rgba(124, 255, 175, 0.14), rgba(124, 255, 175, 0));
+  --gnw-bg-badge: rgba(124, 255, 175, 0.14);
+  
+  --gnw-text-primary: #f8fafc;
+  --gnw-text-secondary: #94a3b8;
+  --gnw-text-fee: #f8fafc;
+  
+  --gnw-border-widget: rgba(255, 255, 255, 0.08);
+  --gnw-shadow-widget: 0 16px 40px rgba(0, 0, 0, 0.38);
+  
+  /* Status Colors */
+  --gnw-color-ws: #7cffaf;
+  --gnw-color-ws-glow: rgba(124, 255, 175, 0.45);
+  --gnw-color-http: #fbbf24;
+  --gnw-color-down: #fb7185;
+  --gnw-color-default: #94a3b8;
+  
   color-scheme: dark;
-  font-family: Inter, "Segoe UI", system-ui, sans-serif;
+  font-family: var(--gnw-font-family);
+  font-size: var(--gnw-font-size-base);
 }
 
+/* ----------------------------------------
+   Large Accessibility Theme
+   ---------------------------------------- */
+[data-theme="large"] {
+  /* Typography - Larger for accessibility */
+  --gnw-font-size-base: 20px;
+  --gnw-font-size-small: 14px;
+  --gnw-font-size-medium: 16px;
+  --gnw-font-size-large: 24px;
+  --gnw-font-size-title: 20px;
+  --gnw-line-height: 1.3;
+  
+  /* Spacing - More breathing room */
+  --gnw-padding-body: 14px;
+  --gnw-padding-widget: 14px 16px 10px;
+  --gnw-padding-row: 10px 12px;
+  --gnw-gap-row: 10px;
+  --gnw-gap-header: 12px;
+  --gnw-gap-title: 14px;
+  
+  /* Sizing - Larger elements */
+  --gnw-badge-size: 36px;
+  --gnw-status-dot-size: 14px;
+  --gnw-row-grid-columns: 64px 1fr auto;
+  --gnw-border-radius: 18px;
+  --gnw-border-radius-row: 14px;
+  
+  /* Colors - High Contrast for visibility */
+  --gnw-bg-body: #0a0c10;
+  --gnw-bg-widget: linear-gradient(180deg, rgba(15, 20, 30, 0.98), rgba(8, 12, 18, 0.98));
+  --gnw-bg-row: rgba(255, 255, 255, 0.06);
+  --gnw-bg-row-latest: rgba(124, 255, 175, 0.18);
+  --gnw-bg-header: linear-gradient(180deg, rgba(124, 255, 175, 0.18), rgba(124, 255, 175, 0));
+  --gnw-bg-badge: rgba(124, 255, 175, 0.18);
+  
+  --gnw-text-primary: #ffffff;
+  --gnw-text-secondary: #b8c4d0;
+  --gnw-text-fee: #ffffff;
+  
+  --gnw-border-widget: rgba(255, 255, 255, 0.12);
+  --gnw-shadow-widget: 0 20px 50px rgba(0, 0, 0, 0.5);
+  
+  /* Status Colors - More vibrant */
+  --gnw-color-ws: #5aff8c;
+  --gnw-color-ws-glow: rgba(90, 255, 140, 0.6);
+  --gnw-color-http: #ffd700;
+  --gnw-color-down: #ff5a5a;
+  --gnw-color-default: #b8c4d0;
+}
+
+/* ----------------------------------------
+   Base Styles
+   ---------------------------------------- */
 * {
   box-sizing: border-box;
 }
@@ -13,49 +121,60 @@ body {
   width: 100%;
   min-width: 0;
   min-height: 100%;
-  background: #0f1218;
-  color: #f8fafc;
+  background: var(--gnw-bg-body);
+  color: var(--gnw-text-primary);
   overflow: hidden;
 }
 
 body {
-  padding: 10px;
+  padding: var(--gnw-padding-body);
 }
 
+/* ----------------------------------------
+   Widget Container
+   ---------------------------------------- */
 .gas-notify-widget {
   width: 100%;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(20, 24, 33, 0.98), rgba(14, 17, 24, 0.98));
-  color: #f8fafc;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+  border-radius: var(--gnw-border-radius);
+  border: 1px solid var(--gnw-border-widget);
+  background: var(--gnw-bg-widget);
+  color: var(--gnw-text-primary);
+  box-shadow: var(--gnw-shadow-widget);
   overflow: hidden;
 }
 
+/* ----------------------------------------
+   Header
+   ---------------------------------------- */
 .gas-notify-widget__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  padding: 10px 11px 8px;
-  background: linear-gradient(180deg, rgba(124, 255, 175, 0.14), rgba(124, 255, 175, 0));
+  gap: var(--gnw-gap-title);
+  padding: var(--gnw-padding-widget);
+  background: var(--gnw-bg-header);
 }
 
 .gas-notify-widget__title {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--gnw-gap-header);
   min-width: 0;
 }
 
 .gas-notify-widget__badge {
-  width: 18px;
-  height: 18px;
+  width: var(--gnw-badge-size);
+  height: var(--gnw-badge-size);
   display: inline-grid;
   place-items: center;
-  border-radius: 999px;
-  background: rgba(124, 255, 175, 0.14);
-  font-size: 11px;
+  border-radius: var(--gnw-border-radius-badge);
+  background: var(--gnw-bg-badge);
+  font-size: var(--gnw-font-size-medium);
+}
+
+/* Larger emoji icon in large theme */
+[data-theme="large"] .gas-notify-widget__badge {
+  font-size: 22px;
 }
 
 .gas-notify-widget__copy {
@@ -64,84 +183,99 @@ body {
 
 .gas-notify-widget__copy strong {
   display: block;
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: var(--gnw-font-size-title);
+  line-height: var(--gnw-line-height);
   font-weight: 700;
 }
 
 .gas-notify-widget__copy span {
   display: block;
-  color: #94a3b8;
-  font-size: 10px;
-  line-height: 1.2;
+  color: var(--gnw-text-secondary);
+  font-size: var(--gnw-font-size-small);
+  line-height: var(--gnw-line-height);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+/* ----------------------------------------
+   Status Dot
+   ---------------------------------------- */
 .gas-notify-widget__status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #94a3b8;
+  width: var(--gnw-status-dot-size);
+  height: var(--gnw-status-dot-size);
+  border-radius: var(--gnw-border-radius-badge);
+  background: var(--gnw-color-default);
   flex: none;
 }
 
 .gas-notify-widget__status-dot[data-mode='ws'] {
-  background: #7cffaf;
-  box-shadow: 0 0 12px rgba(124, 255, 175, 0.45);
+  background: var(--gnw-color-ws);
+  box-shadow: 0 0 12px var(--gnw-color-ws-glow);
 }
 
 .gas-notify-widget__status-dot[data-mode='http'] {
-  background: #fbbf24;
+  background: var(--gnw-color-http);
 }
 
 .gas-notify-widget__status-dot[data-mode='down'] {
-  background: #fb7185;
+  background: var(--gnw-color-down);
 }
 
+/* ----------------------------------------
+   Rows Container
+   ---------------------------------------- */
 .gas-notify-widget__rows {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 0 10px 10px;
+  gap: var(--gnw-gap-row);
+  padding: 0 var(--gnw-padding-body) var(--gnw-padding-body);
 }
 
+/* ----------------------------------------
+   Individual Row
+   ---------------------------------------- */
 .gas-notify-widget__row {
   display: grid;
-  grid-template-columns: 44px 1fr auto;
-  gap: 8px;
-  align-items: baseline;
-  padding: 6px 8px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
+  grid-template-columns: var(--gnw-row-grid-columns);
+  gap: var(--gnw-gap-header);
+  align-items: center;
+  padding: var(--gnw-padding-row);
+  border-radius: var(--gnw-border-radius-row);
+  background: var(--gnw-bg-row);
 }
 
 .gas-notify-widget__row--latest {
-  background: rgba(124, 255, 175, 0.12);
+  background: var(--gnw-bg-row-latest);
 }
 
 .gas-notify-widget__block,
 .gas-notify-widget__age {
-  color: #94a3b8;
-  font-size: 11px;
+  color: var(--gnw-text-secondary);
+  font-size: var(--gnw-font-size-medium);
 }
 
 .gas-notify-widget__fee {
-  font-size: 13px;
+  font-size: var(--gnw-font-size-large);
   font-weight: 700;
-  color: #f8fafc;
+  color: var(--gnw-text-fee);
 }
 
+/* ----------------------------------------
+   Footer
+   ---------------------------------------- */
 .gas-notify-widget__footer {
-  padding: 0 10px 10px;
-  color: #94a3b8;
-  font-size: 10px;
+  padding: 0 var(--gnw-padding-body) var(--gnw-padding-body);
+  color: var(--gnw-text-secondary);
+  font-size: var(--gnw-font-size-small);
   line-height: 1.35;
 }
 
+/* ----------------------------------------
+   Empty State
+   ---------------------------------------- */
 .gas-notify-widget__empty {
   padding: 4px 0 2px;
-  color: #94a3b8;
-  font-size: 11px;
+  color: var(--gnw-text-secondary);
+  font-size: var(--gnw-font-size-medium);
 }

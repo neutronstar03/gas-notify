@@ -3,13 +3,24 @@
   "name": "Gas Notify Widget",
   "description": "A compact Chrome widget for live Ethereum base fee monitoring.",
   "version": "1.0.0",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
   "action": {
-    "default_title": "Open Gas Notify widget"
+    "default_title": "Open Gas Notify widget",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png"
+    }
   },
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["storage", "tabs", "windows"],
+  "permissions": ["storage", "tabs", "windows", "contextMenus"],
   "host_permissions": [
     "https://ethereum-rpc.publicnode.com/*",
     "https://0xrpc.io/*"
