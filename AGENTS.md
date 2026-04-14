@@ -44,6 +44,47 @@ Major.Minor.Build
 - Change `package.json` version to `"1.1"` or `"2.0"` for significant releases
 - The build number (patch) is always auto-generated from the timestamp
 
+## Release Workflow
+
+When creating a new release:
+
+1. **Correct the base version** in `package.json` first (for example `1.2`)
+2. Run the standard verification/build commands:
+
+```bash
+bun run lint:fix
+bun run check
+bun run extension:build
+```
+
+3. Create the git commit for the release changes. The commit message should follow this format:
+
+```
+v1.2: <description of changes>
+```
+
+For example:
+- `v1.2: add 4 new accent colors with separate Color/Size menus`
+- `v1.3: implement dark mode toggle and keyboard shortcuts`
+
+4. Create a git tag matching the base version, for example:
+
+```bash
+git tag v1.2
+```
+
+5. Push both the commit and the tag:
+
+```bash
+git push
+git push --tags
+```
+
+Important:
+- Do not forget to bump the base version before release if the release introduces a new minor/major version
+- Commit messages should start with the version, e.g., `v1.2: description`
+- Tags should use the `v<Major>.<Minor>` format, such as `v1.2`
+
 ## Project Structure
 
 ```
