@@ -23,12 +23,12 @@ export async function requestHttp(url: string, method: string, params: unknown[]
 
 export function toObservation(block: unknown, provider: Provider, mode: Observation['mode']): Observation {
   if (!block || typeof block !== 'object') {
-    throw new Error('Block payload unavailable')
+    throw new Error('No block data')
   }
 
   const cast = block as BlockResponse
   if (!cast.baseFeePerGas || !cast.number) {
-    throw new Error('Block payload missing base fee')
+    throw new Error('Missing base fee')
   }
 
   return {

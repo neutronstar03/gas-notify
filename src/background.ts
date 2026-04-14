@@ -1,13 +1,25 @@
 /* global chrome */
 
 const WIDGET_PATH = 'src/widget.html'
-// Window dimensions to match content body of ~264x233 pixels
-// Window chrome adds ~16px width (borders) and ~31px height (title bar)
-const WIDGET_WINDOW_WIDTH = 280
-const WIDGET_WINDOW_HEIGHT = 270
 
 const WIDGET_WINDOW_ID_KEY = 'widgetWindowId'
-const WIDGET_THEME_KEY = 'widgetTheme'
+const WIDGET_COLOR_KEY = 'widgetColor'
+const WIDGET_SIZE_KEY = 'widgetSize'
+
+// Color options
+const COLOR_OPTIONS = [
+  { id: 'green', label: '💚 Green', accent: '#7cffaf' },
+  { id: 'pearl', label: '💧 Pearl Aqua', accent: '#78dae4' },
+  { id: 'magenta', label: '💜 Hyper Magenta', accent: '#b026ff' },
+  { id: 'fuchsia', label: '💖 Hot Fuchsia', accent: '#ff1654' },
+  { id: 'lime', label: '💛 Lime Cream', accent: '#fffd98' },
+] as const
+
+// Size options
+const SIZE_OPTIONS = [
+  { id: 'normal', label: '◽ Normal', width: 280, height: 270 },
+  { id: 'large', label: '◼️ Large', width: 400, height: 420 },
+] as const
 
 let lastClickTime = 0
 
@@ -16,50 +28,76 @@ chrome.runtime.onInstalled.addListener(createContextMenu)
 chrome.runtime.onStartup.addListener(createContextMenu)
 
 function createContextMenu(): void {
+  // Color menu
   chrome.contextMenus.create({
-    id: 'theme-menu',
-    title: '🎨 Theme',
+    id: 'color-menu',
+    title: '🎨 Color',
     contexts: ['action'],
   })
 
+  for (const color of COLOR_OPTIONS) {
+    chrome.contextMenus.create({
+      id: `color-${color.id}`,
+      parentId: 'color-menu',
+      title: color.label,
+      type: 'radio',
+      contexts: ['action'],
+    })
+  }
+
+  // Size menu
   chrome.contextMenus.create({
-    id: 'theme-original',
-    parentId: 'theme-menu',
-    title: 'Original (Compact)',
-    type: 'radio',
+    id: 'size-menu',
+    title: '📐 Size',
     contexts: ['action'],
   })
 
-  chrome.contextMenus.create({
-    id: 'theme-large',
-    parentId: 'theme-menu',
-    title: 'Large (Accessibility)',
-    type: 'radio',
-    contexts: ['action'],
-  })
+  for (const size of SIZE_OPTIONS) {
+    chrome.contextMenus.create({
+      id: `size-${size.id}`,
+      parentId: 'size-menu',
+      title: size.label,
+      type: 'radio',
+      contexts: ['action'],
+    })
+  }
 
-  // Set initial checked state
-  chrome.storage.local.get(WIDGET_THEME_KEY).then((result) => {
-    const theme = result[WIDGET_THEME_KEY] || 'original'
-    chrome.contextMenus.update(`theme-${theme}`, { checked: true })
+  // Set initial checked states
+  chrome.storage.local.get([WIDGET_COLOR_KEY, WIDGET_SIZE_KEY]).then((result) => {
+    const color = result[WIDGET_COLOR_KEY] || 'green'
+    const size = result[WIDGET_SIZE_KEY] || 'normal'
+    chrome.contextMenus.update(`color-${color}`, { checked: true })
+    chrome.contextMenus.update(`size-${size}`, { checked: true })
   })
 }
 
 // Handle context menu clicks
 chrome.contextMenus.onClicked.addListener(async (info) => {
-  if (info.menuItemId === 'theme-original') {
-    await chrome.storage.local.set({ [WIDGET_THEME_KEY]: 'original' })
-    await notifyWidgetThemeChange('original')
-    await updateWindowSizeForTheme('original')
+  const menuId = String(info.menuItemId)
+
+  // Handle color selection
+  if (menuId.startsWith('color-')) {
+    const color = menuId.replace('color-', '')
+    const validColor = COLOR_OPTIONS.find(c => c.id === color)?.id
+    if (validColor) {
+      await chrome.storage.local.set({ [WIDGET_COLOR_KEY]: validColor })
+      await notifyWidgetThemeChange()
+    }
   }
-  else if (info.menuItemId === 'theme-large') {
-    await chrome.storage.local.set({ [WIDGET_THEME_KEY]: 'large' })
-    await notifyWidgetThemeChange('large')
-    await updateWindowSizeForTheme('large')
+
+  // Handle size selection
+  if (menuId.startsWith('size-')) {
+    const size = menuId.replace('size-', '')
+    const validSize = SIZE_OPTIONS.find(s => s.id === size)?.id
+    if (validSize) {
+      await chrome.storage.local.set({ [WIDGET_SIZE_KEY]: validSize })
+      await notifyWidgetThemeChange()
+      await updateWindowSizeForSize(validSize)
+    }
   }
 })
 
-async function notifyWidgetThemeChange(theme: string): Promise<void> {
+async function notifyWidgetThemeChange(): Promise<void> {
   // Send message to widget window if open
   const windowId = await getStoredWindowId()
   if (windowId !== null) {
@@ -67,7 +105,7 @@ async function notifyWidgetThemeChange(theme: string): Promise<void> {
     const widgetWindow = windows.find(w => w.id === windowId)
     if (widgetWindow?.tabs?.[0]?.id) {
       try {
-        await chrome.tabs.sendMessage(widgetWindow.tabs[0].id, { type: 'theme-change', theme })
+        await chrome.tabs.sendMessage(widgetWindow.tabs[0].id, { type: 'theme-change' })
       }
       catch {
         // Window may have closed or page not loaded
@@ -76,17 +114,17 @@ async function notifyWidgetThemeChange(theme: string): Promise<void> {
   }
 }
 
-async function updateWindowSizeForTheme(theme: string): Promise<void> {
+async function updateWindowSizeForSize(size: string): Promise<void> {
   const windowId = await getStoredWindowId()
   if (windowId === null)
     return
 
-  const isLarge = theme === 'large'
-  const width = isLarge ? 400 : WIDGET_WINDOW_WIDTH
-  const height = isLarge ? 420 : WIDGET_WINDOW_HEIGHT
+  const sizeOption = SIZE_OPTIONS.find(s => s.id === size)
+  if (!sizeOption)
+    return
 
   try {
-    await chrome.windows.update(windowId, { width, height })
+    await chrome.windows.update(windowId, { width: sizeOption.width, height: sizeOption.height })
   }
   catch {
     // Window may have been closed
@@ -124,20 +162,18 @@ chrome.action.onClicked.addListener(async () => {
     return
   }
 
-  // Get current theme for sizing
-  const themeResult = await chrome.storage.local.get(WIDGET_THEME_KEY)
-  const theme = themeResult[WIDGET_THEME_KEY] || 'original'
-  const isLarge = theme === 'large'
-
-  const width = isLarge ? 400 : WIDGET_WINDOW_WIDTH
-  const height = isLarge ? 420 : WIDGET_WINDOW_HEIGHT
+  // Get current color and size for theming
+  const settingsResult = await chrome.storage.local.get([WIDGET_COLOR_KEY, WIDGET_SIZE_KEY])
+  const color = settingsResult[WIDGET_COLOR_KEY] || 'green'
+  const size = settingsResult[WIDGET_SIZE_KEY] || 'normal'
+  const sizeOption = SIZE_OPTIONS.find(s => s.id === size) || SIZE_OPTIONS[0]
 
   const newWindow = await chrome.windows.create({
-    url: `${widgetUrl}?theme=${theme}`,
+    url: `${widgetUrl}?color=${color}&size=${size}`,
     type: 'popup',
     focused: true,
-    width,
-    height,
+    width: sizeOption.width,
+    height: sizeOption.height,
   })
 
   if (!newWindow)
@@ -151,7 +187,7 @@ chrome.action.onClicked.addListener(async () => {
     // Enforce non-resizable by updating if user tries to resize
     chrome.windows.onBoundsChanged.addListener((changedWindow) => {
       if (changedWindow.id === windowId) {
-        chrome.windows.update(windowId, { width, height })
+        chrome.windows.update(windowId, { width: sizeOption.width, height: sizeOption.height })
       }
     })
   }
@@ -217,9 +253,14 @@ async function setStoredWindowId(id: number | null): Promise<void> {
 
 async function updateBadge(isOpen: boolean): Promise<void> {
   if (isOpen) {
-    // Green dot when window is open
+    // Get current color for badge
+    const result = await chrome.storage.local.get(WIDGET_COLOR_KEY)
+    const colorId = result[WIDGET_COLOR_KEY] || 'green'
+    const colorOption = COLOR_OPTIONS.find(c => c.id === colorId) || COLOR_OPTIONS[0]
+
+    // Color dot when window is open
     await chrome.action.setBadgeText({ text: '●' })
-    await chrome.action.setBadgeBackgroundColor({ color: '#7cffaf' })
+    await chrome.action.setBadgeBackgroundColor({ color: colorOption.accent })
   }
   else {
     // Clear badge when window closed
