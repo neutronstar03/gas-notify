@@ -20,24 +20,12 @@ npm run extension:build
 
 ## Versioning System
 
-The extension uses an auto-incrementing version format:
+`package.json` is the single source of truth for the extension version.
 
-```
-Major.Minor.Build
-```
-
-### How it works:
-
-1. **Base Version**: Set in `package.json` as `"version": "1.0"` (Major.Minor only)
-2. **Build Number**: Automatically generated as **seconds since midnight** (0-86399)
-3. **Result**: Every build produces a unique version like `1.0.19557`, `1.0.19558`, etc.
-
-### Why this system:
-
-- **Auto-increments every build** - No manual version bumping needed
-- **Resets daily** - Numbers stay manageable (max 86399)
-- **Easy to verify** - Console shows: `🔨 Building Gas Notify v1.0.19912 (05:31:52)`
-- **Chrome recognizes changes** - Extension updates properly on refresh
+- A Major.Minor value such as `"version": "1.2"` is normalized to `1.2.0` in the generated manifest.
+- Chrome unpacked-extension reloads do not require a unique version for every local build.
+- Do not generate a build component from seconds since midnight: Chrome version components cannot exceed 65535, and the value would reset backwards every day.
+- Bump the package version only for meaningful releases.
 
 ### When to bump Major/Minor:
 
@@ -110,7 +98,8 @@ dist-extension/          # Build output (load this in Chrome)
 Before committing, run:
 
 ```bash
-bun run lint:fix   # Check for linting errors
-bun run check      # TypeScript type checking
-bun run extension:build  # Verify build succeeds
+bun run lint:fix
+bun run verify
 ```
+
+`bun run verify` runs non-mutating lint, type checking, tests, and the extension build. On a fresh or updated checkout, install the exact locked dependencies first with `bun install --frozen-lockfile`.

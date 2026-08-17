@@ -2,23 +2,40 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { defineConfig } from 'vite'
 
+const MAX_VERSION_SEGMENT = 65535
+const VERSION_SEGMENT_PATTERN = /^(?:0|[1-9]\d*)$/
+
+function normalizeExtensionVersion(version: string): string {
+  const segments = version.split('.')
+  if (segments.length === 0 || segments.length > 4) {
+    throw new Error(`Invalid extension version in package.json: ${version}`)
+  }
+
+  const normalized = segments.map((segment) => {
+    if (!VERSION_SEGMENT_PATTERN.test(segment)) {
+      throw new Error(`Invalid extension version segment in package.json: ${segment}`)
+    }
+
+    const value = Number(segment)
+    if (value > MAX_VERSION_SEGMENT) {
+      throw new Error(`Extension version segment exceeds ${MAX_VERSION_SEGMENT}: ${segment}`)
+    }
+
+    return String(value)
+  })
+
+  while (normalized.length < 3) {
+    normalized.push('0')
+  }
+
+  return normalized.join('.')
+}
+
 function getBuildVersion(): string {
   const packageJsonPath = path.resolve(__dirname, 'package.json')
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')) as { version: string }
-
-  // Get base version (e.g., "1.0" from "1.0.0" or just "1.0")
-  const baseVersion = packageJson.version.split('.').slice(0, 2).join('.')
-
-  // Calculate seconds since midnight
-  const now = new Date()
-  const secondsSinceMidnight = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds()
-
-  // Combine: base version + seconds (e.g., "1.0.45231")
-  const buildVersion = `${baseVersion}.${secondsSinceMidnight}`
-
-  // Log the version
-
-  console.log(`🔨 Building Gas Notify v${buildVersion} (${now.toLocaleTimeString()})`)
+  const buildVersion = normalizeExtensionVersion(packageJson.version)
+  console.log(`🔨 Building Gas Notify v${buildVersion}`)
 
   return buildVersion
 }
@@ -33,7 +50,7 @@ function copyManifestPlugin() {
       const iconsTargetDir = path.resolve(__dirname, 'dist-extension/icons')
       const manifest = JSON.parse(fs.readFileSync(sourcePath, 'utf8')) as Record<string, unknown>
 
-      // Set version with timestamp
+      // package.json is the version source; normalize Major.Minor to Major.Minor.0.
       manifest.version = getBuildVersion()
 
       fs.mkdirSync(path.dirname(targetPath), { recursive: true })

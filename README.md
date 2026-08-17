@@ -20,10 +20,8 @@ Compact Chrome extension widget for live Ethereum `baseFeePerGas` monitoring.
 ## Local development
 
 ```bash
-bun install
-bun run lint
-bun run check
-bun run extension:build
+bun install --frozen-lockfile
+bun run verify
 bun run validate:rpcs
 ```
 
@@ -42,8 +40,16 @@ bun run extension:watch
 
 After source changes:
 
-1. run `bun run extension:build`
+1. run `bun run verify`
 2. click **Reload** for the extension in `chrome://extensions`
+
+To update an existing checkout on either computer:
+
+```bash
+git pull --ff-only
+bun install --frozen-lockfile
+bun run verify
+```
 
 ## Notes
 
@@ -70,4 +76,5 @@ The validator prints JSON grouped into `ws_confirmed`, `http_confirmed`, and `re
 ## Versioning
 
 - `package.json` is the single source of truth for the app version
-- the build copies that version into the generated extension `manifest.json`
+- the build normalizes a Major.Minor version such as `1.2` to `1.2.0` in the generated extension manifest
+- unpacked development reloads keep the same version; bump `package.json` only for a meaningful release

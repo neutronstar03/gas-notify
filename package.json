@@ -4,9 +4,11 @@
   "version": "1.2",
   "private": true,
   "scripts": {
-    "extension:build": "bunx vite build --config vite.extension.config.ts",
-    "extension:watch": "bunx vite build --watch --config vite.extension.config.ts",
-    "check": "bunx tsc --noEmit",
+    "extension:build": "vite build --config vite.extension.config.ts",
+    "extension:watch": "vite build --watch --config vite.extension.config.ts",
+    "check": "tsc --noEmit",
+    "test": "bun test",
+    "verify": "bun run lint && bun run check && bun run test && bun run extension:build",
     "validate:rpcs": "bun run scripts/validate-rpcs.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
