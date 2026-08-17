@@ -1,12 +1,14 @@
 import type { BlockResponse, Observation, Provider } from './types'
 import { RPC_CONFIG } from './config'
 
-export async function requestHttp(url: string, method: string, params: unknown[]): Promise<unknown> {
+export async function requestHttp(url: string, method: string, params: unknown[], signal?: AbortSignal): Promise<unknown> {
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method, params }),
-    signal: AbortSignal.timeout(RPC_CONFIG.timeoutMs),
+    signal: signal
+      ? AbortSignal.any([signal, AbortSignal.timeout(RPC_CONFIG.timeoutMs)])
+      : AbortSignal.timeout(RPC_CONFIG.timeoutMs),
   })
 
   if (!response.ok) {

@@ -63,8 +63,8 @@ export class WsRpcClient {
     return await (this.closePromise ?? Promise.resolve({ code: 1000, reason: 'not-connected' }))
   }
 
-  close(): void {
-    this.socket?.close()
+  close(code = 1000, reason = ''): void {
+    this.socket?.close(code, reason)
     this.socket = null
   }
 

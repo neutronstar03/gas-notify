@@ -7,6 +7,7 @@ export const RPC_CONFIG = {
     { name: '0xrpc-http', url: 'https://0xrpc.io/eth' },
   ],
   timeoutMs: 12000,
+  wsNoHeadTimeoutMs: 20000,
   httpPollIntervalMs: 12000,
   reconnectBaseDelayMs: 2000,
   reconnectMaxDelayMs: 30000,
