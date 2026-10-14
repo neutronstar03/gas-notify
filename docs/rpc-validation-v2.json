@@ -1,0 +1,276 @@
+{
+  "ws_confirmed": [
+    {
+      "name": "explicit-6:wss://ethereum-rpc.publicnode.com",
+      "url": "wss://ethereum-rpc.publicnode.com",
+      "category": "ws_confirmed",
+      "transport": "ws",
+      "details": "chainId=0x1 newHeads=7.9s block=26188757 age=2.2s baseFee=0.063gwei feeHistory=ws+http latency=9639ms",
+      "suitable": true,
+      "latencyMs": {
+        "totalMs": 9639,
+        "connectMs": 561,
+        "chainIdMs": 189,
+        "newHeadsMs": 7948,
+        "blockMs": 273,
+        "feeHistoryMs": 282,
+        "feeHistoryHttpMs": 200
+      },
+      "block": {
+        "number": "0x18f9bd5",
+        "numberDecimal": 26188757,
+        "timestamp": 1791957035000,
+        "ageSeconds": 2.2,
+        "baseFeeGwei": 0.063074943,
+        "fresh": true
+      },
+      "history": {
+        "supported": true,
+        "source": "both",
+        "oldestBlock": 26188753,
+        "blockCount": 5,
+        "nextBaseFeeGwei": 0.062393844,
+        "rewardsMinGwei": 0.004440916,
+        "rewardsMaxGwei": 0.235305219,
+        "usableRewards": true,
+        "alignmentDelta": 0,
+        "fresh": true
+      },
+      "capabilities": {
+        "chainId": true,
+        "block": true,
+        "newHeads": true,
+        "feeHistoryWs": true,
+        "feeHistoryHttp": true
+      }
+    },
+    {
+      "name": "explicit-8:wss://eth.drpc.org",
+      "url": "wss://eth.drpc.org",
+      "category": "ws_confirmed",
+      "transport": "ws",
+      "details": "chainId=0x1 newHeads=8.3s block=26188757 age=2.3s baseFee=0.063gwei feeHistory=ws+http latency=9530ms",
+      "suitable": true,
+      "latencyMs": {
+        "totalMs": 9530,
+        "connectMs": 244,
+        "chainIdMs": 60,
+        "newHeadsMs": 8288,
+        "blockMs": 313,
+        "feeHistoryMs": 272,
+        "feeHistoryHttpMs": 294
+      },
+      "block": {
+        "number": "0x18f9bd5",
+        "numberDecimal": 26188757,
+        "timestamp": 1791957035000,
+        "ageSeconds": 2.3,
+        "baseFeeGwei": 0.063074943,
+        "fresh": true
+      },
+      "history": {
+        "supported": true,
+        "source": "both",
+        "oldestBlock": 26188753,
+        "blockCount": 5,
+        "nextBaseFeeGwei": 0.062393844,
+        "rewardsMinGwei": 0.004440916,
+        "rewardsMaxGwei": 0.235305219,
+        "usableRewards": true,
+        "alignmentDelta": 0,
+        "fresh": true
+      },
+      "capabilities": {
+        "chainId": true,
+        "block": true,
+        "newHeads": true,
+        "feeHistoryWs": true,
+        "feeHistoryHttp": true
+      }
+    }
+  ],
+  "http_confirmed": [
+    {
+      "name": "explicit-1:https://ethereum-rpc.publicnode.com",
+      "url": "https://ethereum-rpc.publicnode.com",
+      "category": "http_confirmed",
+      "transport": "http",
+      "details": "chainId=0x1 block=26188756 age=5.1s baseFee=0.063gwei feeHistory=5blocks next=0.063gwei rewards=0.004-0.235gwei latency=623ms",
+      "suitable": true,
+      "latencyMs": {
+        "totalMs": 623,
+        "chainIdMs": 225,
+        "blockMs": 202,
+        "feeHistoryMs": 196
+      },
+      "block": {
+        "number": "0x18f9bd4",
+        "numberDecimal": 26188756,
+        "timestamp": 1791957023000,
+        "ageSeconds": 5.1,
+        "baseFeeGwei": 0.062559084,
+        "fresh": true
+      },
+      "history": {
+        "supported": true,
+        "source": "http",
+        "oldestBlock": 26188752,
+        "blockCount": 5,
+        "nextBaseFeeGwei": 0.063074943,
+        "rewardsMinGwei": 0.004440916,
+        "rewardsMaxGwei": 0.235305219,
+        "usableRewards": true,
+        "alignmentDelta": 0,
+        "fresh": true
+      },
+      "capabilities": {
+        "chainId": true,
+        "block": true,
+        "feeHistoryHttp": true
+      }
+    },
+    {
+      "name": "explicit-2:https://0xrpc.io/eth",
+      "url": "https://0xrpc.io/eth",
+      "category": "http_confirmed",
+      "transport": "http",
+      "details": "chainId=0x1 block=26188756 age=5.5s baseFee=0.063gwei feeHistory=5blocks next=0.063gwei rewards=0.004-0.235gwei latency=1038ms",
+      "suitable": true,
+      "latencyMs": {
+        "totalMs": 1038,
+        "chainIdMs": 623,
+        "blockMs": 204,
+        "feeHistoryMs": 211
+      },
+      "block": {
+        "number": "0x18f9bd4",
+        "numberDecimal": 26188756,
+        "timestamp": 1791957023000,
+        "ageSeconds": 5.5,
+        "baseFeeGwei": 0.062559084,
+        "fresh": true
+      },
+      "history": {
+        "supported": true,
+        "source": "http",
+        "oldestBlock": 26188752,
+        "blockCount": 5,
+        "nextBaseFeeGwei": 0.063074943,
+        "rewardsMinGwei": 0.004440916,
+        "rewardsMaxGwei": 0.235305219,
+        "usableRewards": true,
+        "alignmentDelta": 0,
+        "fresh": true
+      },
+      "capabilities": {
+        "chainId": true,
+        "block": true,
+        "feeHistoryHttp": true
+      }
+    },
+    {
+      "name": "explicit-3:https://eth.drpc.org",
+      "url": "https://eth.drpc.org",
+      "category": "http_confirmed",
+      "transport": "http",
+      "details": "chainId=0x1 block=26188756 age=4.9s baseFee=0.063gwei feeHistory=5blocks next=0.063gwei rewards=0.004-0.235gwei latency=383ms",
+      "suitable": true,
+      "latencyMs": {
+        "totalMs": 383,
+        "chainIdMs": 96,
+        "blockMs": 66,
+        "feeHistoryMs": 220
+      },
+      "block": {
+        "number": "0x18f9bd4",
+        "numberDecimal": 26188756,
+        "timestamp": 1791957023000,
+        "ageSeconds": 4.9,
+        "baseFeeGwei": 0.062559084,
+        "fresh": true
+      },
+      "history": {
+        "supported": true,
+        "source": "http",
+        "oldestBlock": 26188752,
+        "blockCount": 5,
+        "nextBaseFeeGwei": 0.063074943,
+        "rewardsMinGwei": 0.004440916,
+        "rewardsMaxGwei": 0.235305219,
+        "usableRewards": true,
+        "alignmentDelta": 0,
+        "fresh": true
+      },
+      "capabilities": {
+        "chainId": true,
+        "block": true,
+        "feeHistoryHttp": true
+      }
+    },
+    {
+      "name": "explicit-5:https://eth-mainnet.public.blastapi.io",
+      "url": "https://eth-mainnet.public.blastapi.io",
+      "category": "http_confirmed",
+      "transport": "http",
+      "details": "chainId=0x1 block=26188756 age=5.3s baseFee=0.063gwei feeHistory=5blocks next=0.063gwei rewards=0.004-0.235gwei latency=899ms",
+      "suitable": true,
+      "latencyMs": {
+        "totalMs": 899,
+        "chainIdMs": 325,
+        "blockMs": 288,
+        "feeHistoryMs": 286
+      },
+      "block": {
+        "number": "0x18f9bd4",
+        "numberDecimal": 26188756,
+        "timestamp": 1791957023000,
+        "ageSeconds": 5.3,
+        "baseFeeGwei": 0.062559084,
+        "fresh": true
+      },
+      "history": {
+        "supported": true,
+        "source": "http",
+        "oldestBlock": 26188752,
+        "blockCount": 5,
+        "nextBaseFeeGwei": 0.063074943,
+        "rewardsMinGwei": 0.004440916,
+        "rewardsMaxGwei": 0.235305219,
+        "usableRewards": true,
+        "alignmentDelta": 0,
+        "fresh": true
+      },
+      "capabilities": {
+        "chainId": true,
+        "block": true,
+        "feeHistoryHttp": true
+      }
+    }
+  ],
+  "rejected": [
+    {
+      "name": "explicit-4:https://eth.llamarpc.com",
+      "url": "https://eth.llamarpc.com",
+      "category": "rejected",
+      "transport": "http",
+      "details": "request failed: HTTP 525 <none>",
+      "reason": "request failed: HTTP 525 <none>",
+      "suitable": false,
+      "latencyMs": {
+        "totalMs": 438
+      }
+    },
+    {
+      "name": "explicit-7:wss://0xrpc.io/eth",
+      "url": "wss://0xrpc.io/eth",
+      "category": "rejected",
+      "transport": "ws",
+      "details": "request failed: WebSocket connection failed",
+      "reason": "request failed: WebSocket connection failed",
+      "suitable": false,
+      "latencyMs": {
+        "totalMs": 582
+      }
+    }
+  ]
+}

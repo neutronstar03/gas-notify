@@ -366,3 +366,64 @@ body {
   opacity: 0.2;
   color: var(--gnw-text-secondary);
 }
+
+/* Single actionable fee, using the existing compact theme. */
+.gas-notify-widget__suggestion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: calc(100% - 2 * var(--gnw-padding-body));
+  margin: 0 var(--gnw-padding-body) var(--gnw-padding-body);
+  padding: var(--gnw-padding-row);
+  border: 1px solid var(--gnw-border-widget);
+  border-radius: var(--gnw-border-radius-row);
+  background: var(--gnw-bg-row-latest);
+  color: var(--gnw-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  font-variant-numeric: tabular-nums;
+}
+.gas-notify-widget__suggestion strong {
+  font-size: var(--gnw-font-size-large);
+  overflow-wrap: anywhere;
+}
+.gas-notify-widget__suggestion-label,
+#gas-notify-suggestion-note {
+  font-size: var(--gnw-font-size-small);
+  color: var(--gnw-text-secondary);
+}
+.gas-notify-widget__suggestion:hover:not(:disabled) {
+  border-color: var(--gnw-accent);
+}
+.gas-notify-widget__suggestion:focus-visible {
+  outline: 2px solid var(--gnw-accent);
+  outline-offset: 2px;
+}
+.gas-notify-widget__suggestion:disabled {
+  cursor: default;
+  background: var(--gnw-bg-row);
+}
+.gas-notify-widget__copy strong .gas-notify-widget__trend {
+  display: inline;
+  font-size: var(--gnw-font-size-small);
+  margin-left: 4px;
+}
+.gas-notify-widget__row {
+  font-variant-numeric: tabular-nums;
+}
+.gas-notify-widget__fee {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.gas-notify-widget__rows[data-stale='true'] {
+  opacity: 0.6;
+}
+body {
+  overflow-y: auto;
+}
+::selection {
+  background: var(--gnw-accent);
+  color: var(--gnw-bg-body);
+}

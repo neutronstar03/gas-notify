@@ -7,7 +7,7 @@ interface JsonRpcResponse {
   error?: { message: string }
   result?: unknown
   method?: string
-  params?: { subscription?: unknown, result?: { number?: string } }
+  params?: { subscription?: unknown, result?: BlockResponse }
 }
 
 export class WsRpcClient {
@@ -16,8 +16,9 @@ export class WsRpcClient {
   private closePromise: Promise<{ code: number, reason: string }> | null = null
   private closeResolve: ((value: { code: number, reason: string }) => void) | null = null
   private readonly pending = new Map<number, { resolve: (value: unknown) => void, reject: (error: Error) => void, timer: number }>()
-  private headHandler: ((blockNumber: string) => void | Promise<void>) | null = null
+  private headHandler: ((blockNumber: string, block: BlockResponse) => void | Promise<void>) | null = null
   private subscriptionId: unknown = null
+  private connectReject: ((error: Error) => void) | null = null
 
   async connect(url: string): Promise<void> {
     const socket = new WebSocket(url)
@@ -31,26 +32,34 @@ export class WsRpcClient {
     }
 
     socket.onclose = (event) => {
+      this.connectReject?.(new Error('WebSocket closed before opening'))
       this.rejectPending(new Error(`WebSocket closed ${event.code} ${event.reason}`.trim()))
       this.closeResolve?.({ code: event.code, reason: event.reason })
     }
 
     await new Promise<void>((resolve, reject) => {
-      const timer = window.setTimeout(() => reject(new Error('WebSocket open timeout')), RPC_CONFIG.timeoutMs)
+      let timer: number
+      const fail = (error: Error): void => {
+        window.clearTimeout(timer)
+        this.connectReject = null
+        reject(error)
+      }
+      timer = window.setTimeout(() => fail(new Error('WebSocket open timeout')), RPC_CONFIG.timeoutMs)
+      this.connectReject = fail
 
       socket.onopen = () => {
         window.clearTimeout(timer)
+        this.connectReject = null
         resolve()
       }
 
       socket.onerror = () => {
-        window.clearTimeout(timer)
-        reject(new Error('WebSocket connection failed'))
+        fail(new Error('WebSocket connection failed'))
       }
     })
   }
 
-  async subscribeNewHeads(onHead: (blockNumber: string) => void | Promise<void>): Promise<void> {
+  async subscribeNewHeads(onHead: (blockNumber: string, block: BlockResponse) => void | Promise<void>): Promise<void> {
     this.headHandler = onHead
     this.subscriptionId = await this.request('eth_subscribe', ['newHeads'])
   }
@@ -64,6 +73,8 @@ export class WsRpcClient {
   }
 
   close(code = 1000, reason = ''): void {
+    this.connectReject?.(new Error('WebSocket connection cancelled'))
+    this.rejectPending(new Error('WebSocket closed'))
     this.socket?.close(code, reason)
     this.socket = null
   }
@@ -82,7 +93,14 @@ export class WsRpcClient {
       }, RPC_CONFIG.timeoutMs)
 
       this.pending.set(id, { resolve, reject, timer })
-      socket.send(JSON.stringify({ jsonrpc: '2.0', id, method, params }))
+      try {
+        socket.send(JSON.stringify({ jsonrpc: '2.0', id, method, params }))
+      }
+      catch (error) {
+        this.pending.delete(id)
+        window.clearTimeout(timer)
+        reject(ensureError(error))
+      }
     })
   }
 
@@ -113,7 +131,7 @@ export class WsRpcClient {
         return
       }
 
-      await this.headHandler(blockNumber)
+      await this.headHandler(blockNumber, payload.params!.result!)
     }
     catch (error) {
       console.warn('Gas Notify WebSocket message handling failed', ensureError(error))

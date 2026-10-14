@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Gas Notify Widget",
-  "description": "A compact Chrome widget for live Ethereum base fee monitoring.",
+  "description": "Live Ethereum base fees and one copyable fee suggestion for Rabby.",
   "version": "1.0.0",
   "icons": {
     "16": "icons/icon-16.png",
@@ -18,11 +18,13 @@
     }
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
-  "permissions": ["storage", "tabs", "windows", "contextMenus"],
+  "permissions": ["storage", "tabs", "windows", "contextMenus", "system.display", "clipboardWrite"],
   "host_permissions": [
     "https://ethereum-rpc.publicnode.com/*",
-    "https://0xrpc.io/*"
+    "https://eth.drpc.org/*",
+    "https://eth-mainnet.public.blastapi.io/*"
   ]
 }

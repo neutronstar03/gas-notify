@@ -1,5 +1,7 @@
+import type { FeeEstimate } from './feeEstimator'
 import type { ConnectionMode, Observation, Provider } from './types'
 import { RPC_CONFIG } from './config'
+import { estimateFeeHistory, estimateFromBlock } from './feeEstimator'
 import { requestHttp, toObservation } from './rpc'
 import { ensureError, sleep } from './utils'
 import { WsRpcClient } from './wsRpcClient'
@@ -11,11 +13,17 @@ export class GasMonitor {
   private activeHttpController: AbortController | null = null
   private latestBlockNumber: bigint | null = null
   private wsLive = false
+  private wsProviderName = ''
+  private latestObservation: Observation | null = null
+  private latestHttpObservation: Observation | null = null
+  private estimateRunning = false
+  private estimateRequested = false
 
   constructor(
     private readonly handlers: {
       onObservation: (observation: Observation) => void
       onStatus: (message: string, mode?: ConnectionMode) => void
+      onEstimate?: (estimate: FeeEstimate) => void
     },
   ) {}
 
@@ -23,6 +31,8 @@ export class GasMonitor {
     this.stop()
     this.stopRequested = false
     this.latestBlockNumber = null
+    this.latestObservation = null
+    this.latestHttpObservation = null
 
     const generation = ++this.generation
     const httpController = new AbortController()
@@ -34,6 +44,7 @@ export class GasMonitor {
     this.stopRequested = true
     this.generation++
     this.wsLive = false
+    this.estimateRequested = false
     this.activeHttpController?.abort()
     this.activeHttpController = null
     this.activeClient?.close()
@@ -112,8 +123,12 @@ export class GasMonitor {
         return
       }
 
-      await this.requestHttpObservation(providers[httpIndex], generation, signal)
-      httpIndex = (httpIndex + 1) % providers.length
+      for (let attempt = 0; attempt < providers.length; attempt++) {
+        const succeeded = await this.requestHttpObservation(providers[httpIndex], generation, signal)
+        httpIndex = (httpIndex + 1) % providers.length
+        if (succeeded || !this.isActive(generation))
+          break
+      }
     }
   }
 
@@ -150,22 +165,25 @@ export class GasMonitor {
       }
 
       this.setStatus(generation, `Subscribing via ${provider.name}`, 'down')
-      await client.subscribeNewHeads(async (blockNumber) => {
+      await client.subscribeNewHeads(async (blockNumber, head) => {
         if (!this.isActive(generation)) {
           return
         }
 
         receivedHead = true
-        this.wsLive = true
         armNoHeadTimer()
 
         try {
-          const block = await client.getBlockByNumber(blockNumber)
+          const block = head.baseFeePerGas && head.timestamp && head.gasUsed && head.gasLimit
+            ? head
+            : await client.getBlockByNumber(blockNumber)
           if (!this.isActive(generation)) {
             return
           }
 
-          this.emitObservation(toObservation(block, provider, 'ws'), generation)
+          this.wsLive = true
+          this.wsProviderName = provider.name
+          this.emitObservation(toObservation(block, provider, 'ws'), generation, block)
           this.setStatus(generation, `Live via ${provider.name}`, 'ws')
         }
         catch (error) {
@@ -177,7 +195,7 @@ export class GasMonitor {
         return receivedHead
       }
 
-      this.setStatus(generation, `Subscribed via ${provider.name}`, 'ws')
+      this.setStatus(generation, `Waiting for block via ${provider.name}`, 'down')
       armNoHeadTimer()
       await client.waitForClose()
 
@@ -215,8 +233,12 @@ export class GasMonitor {
         return false
       }
 
-      this.emitObservation(toObservation(block, provider, 'http'), generation)
-      return true
+      const observation = toObservation(block, provider, 'http')
+      if (!this.latestHttpObservation || observation.blockNumber >= this.latestHttpObservation.blockNumber) {
+        this.latestHttpObservation = observation
+      }
+      this.emitObservation(observation, generation, block)
+      return Date.now() - observation.timestampMs < RPC_CONFIG.staleAfterMs
     }
     catch (error) {
       if (this.isActive(generation) && !this.wsLive) {
@@ -226,7 +248,7 @@ export class GasMonitor {
     }
   }
 
-  private emitObservation(observation: Observation, generation: number): void {
+  private emitObservation(observation: Observation, generation: number, block: unknown): void {
     if (!this.isActive(generation)) {
       return
     }
@@ -236,11 +258,56 @@ export class GasMonitor {
     }
 
     this.latestBlockNumber = observation.blockNumber
+    this.latestObservation = observation
     this.handlers.onObservation(observation)
+    this.setStatus(generation, `${this.wsLive ? 'Live' : 'HTTP'} via ${this.wsLive ? this.wsProviderName : observation.providerName}`, this.wsLive ? 'ws' : 'http')
+    if (this.handlers.onEstimate) {
+      try {
+        this.handlers.onEstimate(estimateFromBlock(block))
+      }
+      catch { /* A header without gas fields cannot supply a provisional estimate. */ }
+      this.estimateRequested = true
+      void this.refreshEstimate(generation)
+    }
+  }
+
+  private async refreshEstimate(generation: number): Promise<void> {
+    if (this.estimateRunning)
+      return
+    this.estimateRunning = true
+    try {
+      while (this.isActive(generation) && this.estimateRequested) {
+        this.estimateRequested = false
+        for (const provider of RPC_CONFIG.httpProviders) {
+          try {
+            const tag = `0x${this.latestBlockNumber!.toString(16)}`
+            const payload = await requestHttp(provider.url, 'eth_feeHistory', ['0x5', tag, [60]], this.activeHttpController?.signal)
+            if (!this.isActive(generation))
+              return
+            const estimate = estimateFeeHistory(payload)
+            if (estimate.blockNumber !== this.latestBlockNumber)
+              continue
+            this.handlers.onEstimate?.(estimate)
+            break
+          }
+          catch { /* Try another provider; the provisional estimate remains available. */ }
+        }
+      }
+    }
+    finally {
+      this.estimateRunning = false
+      if (this.estimateRequested && !this.stopRequested)
+        void this.refreshEstimate(this.generation)
+    }
   }
 
   private setStatus(generation: number, message: string, mode: ConnectionMode): void {
     if (this.isActive(generation)) {
+      const latest = this.wsLive ? this.latestObservation : this.latestHttpObservation
+      if (mode === 'down' && latest && Date.now() - latest.timestampMs < RPC_CONFIG.staleAfterMs) {
+        this.handlers.onStatus(`${this.wsLive ? 'Live' : 'HTTP'} via ${this.wsLive ? this.wsProviderName : latest.providerName}`, this.wsLive ? 'ws' : 'http')
+        return
+      }
       this.handlers.onStatus(message, mode)
     }
   }

@@ -4,6 +4,8 @@ import { GasMonitor } from '../src/widget/monitor'
 
 interface PendingFetch {
   resolve: (response: Response) => void
+  method: string
+  params: unknown[]
 }
 
 const originalConfig = {
@@ -70,7 +72,9 @@ function blockResponse(blockNumber: bigint): Response {
     result: {
       number: `0x${blockNumber.toString(16)}`,
       baseFeePerGas: '0x3b9aca00',
-      timestamp: '0x1',
+      timestamp: `0x${Math.floor(Date.now() / 1000).toString(16)}`,
+      gasUsed: '0x32',
+      gasLimit: '0x64',
     },
   }), {
     headers: { 'content-type': 'application/json' },
@@ -91,17 +95,19 @@ beforeEach(() => {
     { name: 'third', url: 'https://third.test' },
   ]
   RPC_CONFIG.httpPollIntervalMs = 1
-  globalThis.fetch = (() => {
+  globalThis.fetch = ((_url: unknown, init: RequestInit) => {
+    const { method, params } = JSON.parse(String(init.body))
     return new Promise<Response>((resolve) => {
-      pendingFetches.push({ resolve })
+      pendingFetches.push({ resolve, method, params })
     })
   }) as typeof fetch
 })
 
-afterEach(() => {
+afterEach(async () => {
   for (const monitor of activeMonitors.splice(0)) {
     monitor.stop()
   }
+  await flushAsyncWork()
   RPC_CONFIG.wsProviders = [...originalConfig.wsProviders]
   RPC_CONFIG.httpProviders = [...originalConfig.httpProviders]
   RPC_CONFIG.wsNoHeadTimeoutMs = originalConfig.wsNoHeadTimeoutMs
@@ -117,6 +123,102 @@ afterEach(() => {
 })
 
 describe('GasMonitor startup reliability', () => {
+  test('keeps WebSocket health while HTTP supplies a newer observation', async () => {
+    RPC_CONFIG.httpProviders = [{ name: 'fallback', url: 'https://fallback.test' }]
+    RPC_CONFIG.wsProviders = [{ name: 'live', url: 'wss://live.test' }]
+    RPC_CONFIG.wsNoHeadTimeoutMs = 1000
+    Object.defineProperty(globalThis, 'window', { configurable: true, value: globalThis })
+    globalThis.WebSocket = SilentWebSocket as unknown as typeof WebSocket
+    const statuses: Array<{ message: string, mode: string | undefined }> = []
+    const monitor = new GasMonitor({
+      onObservation: () => {},
+      onStatus: (message, mode) => statuses.push({ message, mode }),
+    })
+    activeMonitors.push(monitor)
+    monitor.start()
+    pendingFetches[0].resolve(blockResponse(10n))
+    await new Promise(resolve => setTimeout(resolve, 15))
+    const socket = SilentWebSocket.instances[0]
+    socket.onmessage?.({ data: JSON.stringify({ method: 'eth_subscription', params: {
+      subscription: 'subscription-id',
+      result: { number: '0xb', baseFeePerGas: '0x64', timestamp: `0x${Math.floor(Date.now() / 1000).toString(16)}`, gasUsed: '0x32', gasLimit: '0x64' },
+    } }) } as MessageEvent)
+    await flushAsyncWork()
+    pendingFetches[1].resolve(blockResponse(12n))
+    await flushAsyncWork()
+    expect(statuses.at(-1)).toEqual({ message: 'Live via live', mode: 'ws' })
+  })
+
+  test('does not publish history after stopping the monitor', async () => {
+    RPC_CONFIG.httpProviders = [{ name: 'first', url: 'https://first.test' }]
+    const estimates: Array<{ provisional: boolean }> = []
+    const monitor = new GasMonitor({ onObservation: () => {}, onStatus: () => {}, onEstimate: estimate => estimates.push(estimate) })
+    activeMonitors.push(monitor)
+    monitor.start()
+    pendingFetches[0].resolve(blockResponse(10n))
+    await flushAsyncWork()
+    const request = pendingFetches.find(item => item.method === 'eth_feeHistory')!
+    monitor.stop()
+    request.resolve(new Response(JSON.stringify({ result: { oldestBlock: '0xa', baseFeePerGas: ['0x64', '0x64'], gasUsedRatio: [0.5], reward: [['0x64']] } })))
+    await flushAsyncWork()
+    expect(estimates).toHaveLength(1)
+    expect(estimates[0].provisional).toBe(true)
+  })
+  test('emits a provisional estimate then upgrades it from history without waiting for five live blocks', async () => {
+    RPC_CONFIG.httpProviders = [{ name: 'first', url: 'https://first.test' }]
+    const estimates: Array<{ feeWei: bigint, provisional: boolean }> = []
+    const monitor = new GasMonitor({
+      onObservation: () => {},
+      onStatus: () => {},
+      onEstimate: estimate => estimates.push(estimate),
+    })
+    activeMonitors.push(monitor)
+    monitor.start()
+    pendingFetches[0].resolve(blockResponse(10n))
+    await flushAsyncWork()
+    expect(estimates[0]).toMatchObject({ feeWei: 1100000000n, provisional: true })
+    const history = pendingFetches.find(request => request.method === 'eth_feeHistory')!
+    expect(history.params).toEqual(['0x5', '0xa', [60]])
+    history.resolve(new Response(JSON.stringify({ result: {
+      oldestBlock: '0xa',
+      baseFeePerGas: ['0x3b9aca00', '0x3b9aca00'],
+      gasUsedRatio: [0.5],
+      reward: [['0xbebc200']],
+    } })))
+    await flushAsyncWork()
+    expect(estimates.at(-1)).toMatchObject({ feeWei: 1200000000n, provisional: false })
+  })
+
+  test('ignores fee history for a different head', async () => {
+    RPC_CONFIG.httpProviders = [{ name: 'first', url: 'https://first.test' }]
+    const estimates: Array<{ provisional: boolean }> = []
+    const monitor = new GasMonitor({ onObservation: () => {}, onStatus: () => {}, onEstimate: value => estimates.push(value) })
+    activeMonitors.push(monitor)
+    monitor.start()
+    pendingFetches[0].resolve(blockResponse(10n))
+    await flushAsyncWork()
+    pendingFetches.find(request => request.method === 'eth_feeHistory')!.resolve(new Response(JSON.stringify({ result: {
+      oldestBlock: '0x9',
+      baseFeePerGas: ['0x64', '0x64'],
+      gasUsedRatio: [0.5],
+      reward: [['0x64']],
+    } })))
+    await flushAsyncWork()
+    expect(estimates).toHaveLength(1)
+    expect(estimates[0].provisional).toBe(true)
+  })
+
+  test('tries another provider immediately after a polling failure', async () => {
+    const monitor = new GasMonitor({ onObservation: () => {}, onStatus: () => {} })
+    activeMonitors.push(monitor)
+    monitor.start()
+    for (const request of pendingFetches.slice()) request.resolve(blockResponse(10n))
+    await new Promise(resolve => setTimeout(resolve, 10))
+    expect(pendingFetches).toHaveLength(4)
+    pendingFetches[3].resolve(new Response('unavailable', { status: 503 }))
+    await flushAsyncWork()
+    expect(pendingFetches).toHaveLength(5)
+  })
   test('starts every HTTP provider immediately and ignores duplicate or older blocks', async () => {
     const seenBlocks: bigint[] = []
     const monitor = new GasMonitor({

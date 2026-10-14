@@ -11,12 +11,17 @@
         <div class="gas-notify-widget__title">
           <span class="gas-notify-widget__badge">⛽</span>
           <div class="gas-notify-widget__copy">
-            <strong>Base Fee</strong>
+            <strong>Base Fee <span id="gas-notify-trend" class="gas-notify-widget__trend"></span></strong>
             <span id="gas-notify-status">Connecting…</span>
           </div>
         </div>
         <span id="gas-notify-dot" class="gas-notify-widget__status-dot" data-mode="down"></span>
       </header>
+      <button id="gas-notify-suggestion" class="gas-notify-widget__suggestion" type="button" disabled title="Paste the copied gwei value into Rabby's Custom Gas Price and Max Priority Fee fields">
+        <span class="gas-notify-widget__suggestion-label">Suggested</span>
+        <strong id="gas-notify-suggestion-value">Connecting…</strong>
+        <span id="gas-notify-suggestion-note" role="status">Waiting for network</span>
+      </button>
       <div id="gas-notify-rows" class="gas-notify-widget__rows"></div>
       <footer id="gas-notify-footer" class="gas-notify-widget__footer">Waiting for first block…</footer>
     </section>

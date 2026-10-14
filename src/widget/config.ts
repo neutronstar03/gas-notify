@@ -1,10 +1,13 @@
 export const RPC_CONFIG = {
+  staleAfterMs: 45000,
   wsProviders: [
     { name: 'publicnode-ws', url: 'wss://ethereum-rpc.publicnode.com' },
+    { name: 'drpc-ws', url: 'wss://eth.drpc.org' },
   ],
   httpProviders: [
     { name: 'publicnode-http', url: 'https://ethereum-rpc.publicnode.com' },
-    { name: '0xrpc-http', url: 'https://0xrpc.io/eth' },
+    { name: 'drpc-http', url: 'https://eth.drpc.org' },
+    { name: 'blast-http', url: 'https://eth-mainnet.public.blastapi.io' },
   ],
   timeoutMs: 12000,
   wsNoHeadTimeoutMs: 20000,
