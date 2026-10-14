@@ -18,8 +18,8 @@ export const COLOR_OPTIONS = [
 
 /** Window outer sizes: the popup includes ~30px of browser chrome around the content. */
 export const SIZE_OPTIONS = [
-  { id: 'normal', label: '◽ Normal', width: 280, height: 350 },
-  { id: 'large', label: '◼️ Large', width: 400, height: 550 },
+  { id: 'normal', label: '◽ Normal', width: 280, height: 390 },
+  { id: 'large', label: '◼️ Large', width: 400, height: 610 },
 ] as const
 
 export type ColorOption = typeof COLOR_OPTIONS[number]

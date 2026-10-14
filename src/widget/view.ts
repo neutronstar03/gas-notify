@@ -4,7 +4,7 @@ import { RPC_CONFIG } from './config'
 import { formatAge, formatWeiGwei } from './format'
 import { mustGetElement } from './utils'
 
-const MAX_ROWS = 4
+const MAX_ROWS = 5
 
 export class WidgetView {
   private readonly rowsEl = mustGetElement<HTMLElement>('gas-notify-rows')
@@ -14,7 +14,6 @@ export class WidgetView {
   private readonly suggestionEl = mustGetElement<HTMLButtonElement>('gas-notify-suggestion')
   private readonly valueEl = mustGetElement<HTMLElement>('gas-notify-suggestion-value')
   private readonly noteEl = mustGetElement<HTMLElement>('gas-notify-suggestion-note')
-  private readonly trendEl = mustGetElement<HTMLElement>('gas-notify-trend')
   private recent: Observation[] = []
   private estimate: FeeEstimate | null = null
   private status = 'Connecting…'
@@ -72,15 +71,6 @@ export class WidgetView {
       age.className = 'gas-notify-widget__age'
       row.append(block, fee, age)
       this.rowsEl.append(row)
-    }
-    const [latest, previous] = this.recent
-    if (latest && previous && previous.baseFeeWei > 0n) {
-      const change = Number((latest.baseFeeWei - previous.baseFeeWei) * 1000n / previous.baseFeeWei) / 10
-      this.trendEl.textContent = `${change > 0 ? '+' : ''}${change.toFixed(1)}%`
-      this.trendEl.title = 'Base fee change from previous observed block'
-    }
-    else {
-      this.trendEl.textContent = ''
     }
     this.render()
   }

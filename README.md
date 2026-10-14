@@ -83,20 +83,25 @@ The validator prints JSON grouped into `ws_confirmed`, `http_confirmed`, and `re
 
 The widget shows one **Suggested** gwei value. Click it to copy the number, then paste it into Rabby's **Custom Gas Price** and **Max Priority Fee** fields. With both fields equal, the effective price per gas equals the quoted value when the transaction is included. The suggestion estimates ordinary Ethereum mainnet transaction fees, not blob fees, gas limits, transaction success, or guaranteed inclusion.
 
-For up to five recent blocks, `eth_feeHistory` supplies each block's gas-weighted 60th-percentile effective priority fee and the calculated next-block base fee `B`. The estimator uses:
+The suggestion is a cost-oriented market reference, not a bid to compete with high-paying transactions for next-block inclusion. It does not use priority-fee percentiles.
+
+For up to five recent base fees, compute an exponential moving average `E` with weight 0.5 for each new block. Let `C` be the latest actual base fee and `B` the protocol-calculated next-block base fee:
 
 ```text
-T = max(median(recent usable tips), latest block tip (zero for an empty block))
-Suggested = max(ceil(B × 1.10), B + T)
+E = first recent base fee
+For each newer base fee: E = ceil((E + newer) / 2)
+Suggested = max(min(ceil(E × 1.10), ceil(C × 1.10)), B + 1 wei)
 ```
 
-The median of an even sample count rounds upward. All calculations use integer wei. Values use at most three decimal places in gwei. The copied suggestion rounds upward; positive base fees below 0.001 gwei display as `<0.001`. The latest tip catches spikes already visible in a confirmed block; unseen pending demand can still delay inclusion.
+The current-base cap prevents old spikes from holding the suggestion high after the market falls. The next-base floor covers a known protocol increase, without stacking another 10% on it. Full blocks can raise the next base by 12.5%, so that floor can exceed the usual +10% cap. A tiny one-wei margin is not a guarantee of priority or inclusion; waiting longer is an intentional tradeoff.
 
-History is fetched immediately, so there is no five-block startup wait. One to four usable blocks work too. Without usable tip history, the widget calculates the next base fee from the latest block's base fee and gas utilization, applies +10%, and marks the suggestion **Provisional**. After 45 seconds without a newer block timestamp, copying is disabled and the widget shows **Unavailable** until fresh data arrives.
+All calculations use integer wei. Values use at most three decimal places in gwei. The copied suggestion rounds upward (adding less than 0.001 gwei); positive base fees below 0.001 gwei display as `<0.001`.
 
-The four rows remain actual observed base fees. The header shows the change from the previous observed block (which may not be consecutive during an outage). Row ages are block ages; the footer shows time since receiving the latest displayed block.
+Base-fee history is fetched immediately; one to four returned blocks work too. While it is loading or unavailable, a single current block supplies the same bounded reference and marks it **Provisional**. After 45 seconds without a newer block timestamp, copying is disabled until fresh data arrives.
 
-Color and size settings survive reloads, the toolbar badge follows the accent, and window position is remembered and clamped to current display work areas. Right-click the extension action for Color/Size; click to open/focus, double-click to close. The extension uses display information to keep its window on-screen and clipboard-write permission for the copy button.
+Five rows show actual observed base fees. The ambiguous header percentage has been removed. Row ages are block ages; the footer shows time since receiving the latest displayed block. History starts filling as blocks are observed, independently of the immediately fetched estimator history.
+
+Color and size settings survive reloads, the toolbar badge follows the accent, and window position is remembered and clamped to current display work areas. The window can be freely resized; the Normal/Large menu applies a preset only when explicitly selected. Click the extension action to open/focus, double-click to close. Display information keeps the window on-screen; clipboard-write permission supports the copy button.
 
 ## RPC sources and release validation
 

@@ -281,7 +281,7 @@ export class GasMonitor {
         for (const provider of RPC_CONFIG.httpProviders) {
           try {
             const tag = `0x${this.latestBlockNumber!.toString(16)}`
-            const payload = await requestHttp(provider.url, 'eth_feeHistory', ['0x5', tag, [60]], this.activeHttpController?.signal)
+            const payload = await requestHttp(provider.url, 'eth_feeHistory', ['0x5', tag, []], this.activeHttpController?.signal)
             if (!this.isActive(generation))
               return
             const estimate = estimateFeeHistory(payload)

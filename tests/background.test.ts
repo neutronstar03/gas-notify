@@ -277,53 +277,45 @@ describe('widget window bounds', () => {
     expect(badgeText).toBe('')
   })
 
-  test('leaves a moved window alone when the size already matches', async () => {
+  test('leaves a manual resize at the size the user chose', async () => {
     clickAction()
     await settle()
     updateCalls = []
 
-    fireBoundsChanged({ id: 1, left: 120, top: 80, width: 280, height: 350 })
+    fireBoundsChanged({ id: 1, left: 120, top: 80, width: 320, height: 420 })
     await settle()
 
     expect(updateCalls).toHaveLength(0)
   })
 
-  test('applies the current settings size instead of the size captured at open time', async () => {
+  test('does not apply a settings change to the window that is already open', async () => {
     clickAction()
     await settle()
     updateCalls = []
 
-    // The user changed the size while the window was already open.
+    // The menu writes the new size, but the open window keeps its geometry; the
+    // next open picks the preset up instead.
     stored[WIDGET_SIZE_KEY] = 'large'
     fireBoundsChanged({ id: 1, left: 300, top: 200, width: 600, height: 700 })
     await settle()
 
-    expect(updateCalls).toHaveLength(1)
-    expect(updateCalls[0].windowId).toBe(1)
-    expect(updateCalls[0].details.width).toBe(400)
-    expect(updateCalls[0].details.height).toBe(550)
-    expect(updateCalls[0].details.left).toBe(300)
-    expect(updateCalls[0].details.top).toBe(200)
+    expect(updateCalls).toHaveLength(0)
   })
 
-  test('clamps a resized window back into the display work area', async () => {
+  test('allows a manual resize that leaves the work area', async () => {
     displays = [{ workArea: { left: 0, top: 0, width: 800, height: 600 } }]
     clickAction()
     await settle()
     updateCalls = []
 
-    stored[WIDGET_SIZE_KEY] = 'large'
     fireBoundsChanged({ id: 1, left: 780, top: 580, width: 600, height: 700 })
     await settle()
 
-    expect(updateCalls).toHaveLength(1)
-    expect(updateCalls[0].details.width).toBe(400)
-    expect(updateCalls[0].details.height).toBe(550)
-    expect(updateCalls[0].details.left).toBe(400)
-    expect(updateCalls[0].details.top).toBe(50)
+    expect(updateCalls).toHaveLength(0)
+    expect(stored.widgetPosition).toEqual({ left: 780, top: 580 })
   })
 
-  test('keeps negative coordinates on a display left of the primary one', async () => {
+  test('persists the position on a display left of the primary one', async () => {
     displays = [
       { workArea: { left: 0, top: 0, width: 1920, height: 1080 } },
       { workArea: { left: -1280, top: 0, width: 1280, height: 1024 } },
@@ -332,42 +324,38 @@ describe('widget window bounds', () => {
     await settle()
     updateCalls = []
 
-    stored[WIDGET_SIZE_KEY] = 'large'
     fireBoundsChanged({ id: 1, left: -1200, top: 100, width: 500, height: 600 })
     await settle()
 
-    expect(updateCalls).toHaveLength(1)
-    expect(updateCalls[0].details.left).toBe(-1200)
-    expect(updateCalls[0].details.top).toBe(100)
+    expect(updateCalls).toHaveLength(0)
+    expect(stored.widgetPosition).toEqual({ left: -1200, top: 100 })
   })
 
   test('ignores bounds changes for windows that are not the widget', async () => {
     clickAction()
     await settle()
     updateCalls = []
+    storageWrites = []
 
     fireBoundsChanged({ id: 99, left: 10, top: 10, width: 900, height: 900 })
     await settle()
 
     expect(updateCalls).toHaveLength(0)
+    expect(positionWrites()).toEqual([])
   })
 
-  test('skips clamping when the display API is unavailable', async () => {
+  test('persists the position when the display API is unavailable', async () => {
     displays = []
     displayThrows = true
     clickAction()
     await settle()
     updateCalls = []
 
-    stored[WIDGET_SIZE_KEY] = 'large'
     fireBoundsChanged({ id: 1, left: 300, top: 200, width: 600, height: 700 })
     await settle()
 
-    expect(updateCalls).toHaveLength(1)
-    expect(updateCalls[0].details.width).toBe(400)
-    expect(updateCalls[0].details.height).toBe(550)
-    expect(updateCalls[0].details.left).toBeUndefined()
-    expect(updateCalls[0].details.top).toBeUndefined()
+    expect(updateCalls).toHaveLength(0)
+    expect(stored.widgetPosition).toEqual({ left: 300, top: 200 })
   })
 })
 
@@ -380,7 +368,7 @@ describe('widget window position', () => {
     clickAction()
     await settle()
 
-    fireBoundsChanged({ id: 1, left: -1100, top: 60, width: 280, height: 350 })
+    fireBoundsChanged({ id: 1, left: -1100, top: 60, width: 280, height: 390 })
     await settle()
     updateCalls = []
     expect(stored.widgetPosition).toEqual({ left: -1100, top: 60 })
@@ -398,7 +386,7 @@ describe('widget window position', () => {
     expect(createCalls[1].left).toBe(-1100)
     expect(createCalls[1].top).toBe(60)
     expect(createCalls[1].width).toBe(280)
-    expect(createCalls[1].height).toBe(350)
+    expect(createCalls[1].height).toBe(390)
   })
 
   test('pulls an off-screen saved position back onto a display', async () => {
@@ -409,9 +397,9 @@ describe('widget window position', () => {
 
     expect(createCalls).toHaveLength(1)
     expect(createCalls[0].left).toBe(1_640)
-    expect(createCalls[0].top).toBe(730)
+    expect(createCalls[0].top).toBe(690)
     // The clamped spot replaces the unreachable one on disk.
-    expect(stored.widgetPosition).toEqual({ left: 1_640, top: 730 })
+    expect(stored.widgetPosition).toEqual({ left: 1_640, top: 690 })
   })
 
   test('opens at the default spot when the saved position is not usable', async () => {
@@ -431,11 +419,11 @@ describe('widget position persistence', () => {
     clickAction()
     await settle()
 
-    fireBoundsChanged({ id: 1, left: 120, top: 80, width: 280, height: 350 })
+    fireBoundsChanged({ id: 1, left: 120, top: 80, width: 280, height: 390 })
     await settle()
     expect(positionWrites()).toEqual([{ left: 120, top: 80 }])
 
-    fireBoundsChanged({ id: 1, left: 120, top: 80, width: 280, height: 350 })
+    fireBoundsChanged({ id: 1, left: 120, top: 80, width: 280, height: 390 })
     await settle()
     expect(positionWrites()).toEqual([{ left: 120, top: 80 }])
   })
@@ -444,9 +432,9 @@ describe('widget position persistence', () => {
     clickAction()
     await settle()
 
-    fireBoundsChanged({ id: 1, left: 10, top: 10, width: 280, height: 350 })
-    fireBoundsChanged({ id: 1, left: 200, top: 150, width: 280, height: 350 })
-    fireBoundsChanged({ id: 1, left: 400, top: 300, width: 280, height: 350 })
+    fireBoundsChanged({ id: 1, left: 10, top: 10, width: 280, height: 390 })
+    fireBoundsChanged({ id: 1, left: 200, top: 150, width: 280, height: 390 })
+    fireBoundsChanged({ id: 1, left: 400, top: 300, width: 280, height: 390 })
     await settle()
 
     expect(positionWrites()).toEqual([{ left: 400, top: 300 }])
@@ -493,7 +481,29 @@ describe('badge', () => {
     expect(stored[WIDGET_SIZE_KEY]).toBe('large')
     expect(updateCalls).toHaveLength(1)
     expect(updateCalls[0].details.width).toBe(400)
-    expect(updateCalls[0].details.height).toBe(550)
+    expect(updateCalls[0].details.height).toBe(610)
+  })
+
+  test('clamps the menu resize into the display work area', async () => {
+    displays = [{ workArea: { left: 0, top: 0, width: 800, height: 600 } }]
+    stored.widgetPosition = { left: 5_000, top: 5_000 }
+    clickAction()
+    await settle()
+
+    // Opening pulled the widget to the bottom-right of the small display, so the
+    // larger preset no longer fits and has to be clamped back in.
+    expect(createCalls[0].left).toBe(520)
+    expect(createCalls[0].top).toBe(210)
+    updateCalls = []
+
+    clickMenu('size-large')
+    await settle()
+
+    expect(updateCalls).toHaveLength(1)
+    expect(updateCalls[0].details.width).toBe(400)
+    expect(updateCalls[0].details.height).toBe(610)
+    expect(updateCalls[0].details.left).toBe(400)
+    expect(updateCalls[0].details.top).toBe(0)
   })
 })
 
@@ -502,14 +512,14 @@ describe('clampWidgetPosition', () => {
   const secondary: WorkArea = { left: -1280, top: 0, width: 1280, height: 1024, right: 0, bottom: 1024 }
 
   test('returns null when there is no usable position or display', () => {
-    expect(background.clampWidgetPosition({ width: 280, height: 350 }, [primary])).toBeNull()
-    expect(background.clampWidgetPosition({ left: 10, top: Number.NaN, width: 280, height: 350 }, [primary])).toBeNull()
-    expect(background.clampWidgetPosition({ left: 10, top: 10, width: 280, height: 350 }, [])).toBeNull()
+    expect(background.clampWidgetPosition({ width: 280, height: 390 }, [primary])).toBeNull()
+    expect(background.clampWidgetPosition({ left: 10, top: Number.NaN, width: 280, height: 390 }, [primary])).toBeNull()
+    expect(background.clampWidgetPosition({ left: 10, top: 10, width: 280, height: 390 }, [])).toBeNull()
   })
 
   test('clamps a window into the work area', () => {
-    expect(background.clampWidgetPosition({ left: 1900, top: 1000, width: 280, height: 350 }, [primary]))
-      .toEqual({ left: 1_640, top: 730 })
+    expect(background.clampWidgetPosition({ left: 1900, top: 1000, width: 280, height: 390 }, [primary]))
+      .toEqual({ left: 1_640, top: 690 })
   })
 
   test('pins a window larger than the work area to its origin', () => {
@@ -518,21 +528,21 @@ describe('clampWidgetPosition', () => {
   })
 
   test('keeps negative coordinates on displays left of the primary one', () => {
-    expect(background.clampWidgetPosition({ left: -1200, top: 100, width: 400, height: 550 }, [primary, secondary]))
+    expect(background.clampWidgetPosition({ left: -1200, top: 100, width: 400, height: 610 }, [primary, secondary]))
       .toEqual({ left: -1200, top: 100 })
   })
 
   test('falls back to the most overlapping display for an off-screen window', () => {
-    expect(background.clampWidgetPosition({ left: 5_000, top: 5_000, width: 280, height: 350 }, [primary, secondary]))
-      .toEqual({ left: 1_640, top: 730 })
+    expect(background.clampWidgetPosition({ left: 5_000, top: 5_000, width: 280, height: 390 }, [primary, secondary]))
+      .toEqual({ left: 1_640, top: 690 })
   })
 })
 
 describe('widget settings', () => {
   test('exposes the v2 window sizes', () => {
     expect(SIZE_OPTIONS.map(option => [option.id, option.width, option.height])).toEqual([
-      ['normal', 280, 350],
-      ['large', 400, 550],
+      ['normal', 280, 390],
+      ['large', 400, 610],
     ])
     expect(COLOR_OPTIONS).toHaveLength(5)
   })

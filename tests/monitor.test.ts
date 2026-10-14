@@ -178,7 +178,7 @@ describe('GasMonitor startup reliability', () => {
     await flushAsyncWork()
     expect(estimates[0]).toMatchObject({ feeWei: 1100000000n, provisional: true })
     const history = pendingFetches.find(request => request.method === 'eth_feeHistory')!
-    expect(history.params).toEqual(['0x5', '0xa', [60]])
+    expect(history.params).toEqual(['0x5', '0xa', []])
     history.resolve(new Response(JSON.stringify({ result: {
       oldestBlock: '0xa',
       baseFeePerGas: ['0x3b9aca00', '0x3b9aca00'],
@@ -186,7 +186,7 @@ describe('GasMonitor startup reliability', () => {
       reward: [['0xbebc200']],
     } })))
     await flushAsyncWork()
-    expect(estimates.at(-1)).toMatchObject({ feeWei: 1200000000n, provisional: false })
+    expect(estimates.at(-1)).toMatchObject({ feeWei: 1100000000n, provisional: false })
   })
 
   test('ignores fee history for a different head', async () => {

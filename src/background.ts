@@ -94,7 +94,7 @@ chrome.windows.onRemoved.addListener((windowId) => {
   guard(() => handleWindowRemoved(windowId), 'window removal handling failed')
 })
 
-// Registered at module top level so the size guard survives service worker
+// Registered at module top level so position persistence survives service worker
 // restarts instead of being re-registered for every opened window.
 chrome.windows.onBoundsChanged.addListener((changedWindow) => {
   guard(() => handleWidgetBoundsChanged(changedWindow), 'bounds handling failed')
@@ -297,9 +297,9 @@ async function handleWindowRemoved(windowId: number): Promise<void> {
 }
 
 /**
- * One module-scope listener for every widget window. It re-reads the current
- * settings on each event, so a size chosen after the window was opened still
- * applies (no stale closure) while moving the window is allowed through untouched.
+ * One module-scope listener for every widget window. Bounds changes are only used
+ * to remember where the user put the window: the user owns the size, so a manual
+ * resize is never corrected here.
  */
 async function handleWidgetBoundsChanged(changedWindow: chrome.windows.Window): Promise<void> {
   const windowId = changedWindow.id
@@ -311,31 +311,12 @@ async function handleWidgetBoundsChanged(changedWindow: chrome.windows.Window): 
     return
   }
 
-  // Persist where the user put the window so the next open reuses it, and feed
-  // the same value into the size correction below.
+  // Persist where the user put the window so the next open reuses it.
   const left = normalizeCoordinate(changedWindow.left)
   const top = normalizeCoordinate(changedWindow.top)
   if (left !== undefined && top !== undefined) {
     persistWidgetPosition({ left, top })
   }
-
-  const { size } = await readSettings()
-  const option = findSizeOption(size) ?? SIZE_OPTIONS[0]
-  if (changedWindow.width === option.width && changedWindow.height === option.height) {
-    // Already the right size; the event is just the user moving the window.
-    return
-  }
-
-  const position = clampWidgetPosition(
-    { left, top, width: option.width, height: option.height },
-    await readWorkAreas(),
-  )
-
-  await updateWindowBounds(windowId, {
-    width: option.width,
-    height: option.height,
-    ...position,
-  })
 }
 
 async function isWidgetWindow(windowId: number): Promise<boolean> {
