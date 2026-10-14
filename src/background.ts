@@ -22,53 +22,81 @@ const SIZE_OPTIONS = [
 ] as const
 
 let lastClickTime = 0
+let contextMenuInitialization: Promise<void> | null = null
 
 // Initialize context menu on install/startup
 chrome.runtime.onInstalled.addListener(createContextMenu)
 chrome.runtime.onStartup.addListener(createContextMenu)
 
-function createContextMenu(): void {
+function createContextMenu(): Promise<void> {
+  // Share overlapping lifecycle events so rebuilds cannot remove each other's items.
+  contextMenuInitialization ??= rebuildContextMenu()
+    .catch((error) => {
+      console.error('Gas Notify context menu initialization failed', error)
+    })
+    .finally(() => {
+      contextMenuInitialization = null
+    })
+  return contextMenuInitialization
+}
+
+function createMenuItem(properties: chrome.contextMenus.CreateProperties): Promise<void> {
+  return new Promise((resolve, reject) => {
+    chrome.contextMenus.create(properties, () => {
+      const error = chrome.runtime.lastError
+      if (error) {
+        reject(new Error(error.message))
+      }
+      else {
+        resolve()
+      }
+    })
+  })
+}
+
+async function rebuildContextMenu(): Promise<void> {
+  const settings = await chrome.storage.local.get([WIDGET_COLOR_KEY, WIDGET_SIZE_KEY])
+  const colorId = COLOR_OPTIONS.find(color => color.id === settings[WIDGET_COLOR_KEY])?.id ?? 'green'
+  const sizeId = SIZE_OPTIONS.find(size => size.id === settings[WIDGET_SIZE_KEY])?.id ?? 'normal'
+
+  // Chrome retains menus across browser sessions; clear them before reusing IDs.
+  await chrome.contextMenus.removeAll()
+
   // Color menu
-  chrome.contextMenus.create({
+  await createMenuItem({
     id: 'color-menu',
     title: '🎨 Color',
     contexts: ['action'],
   })
 
   for (const color of COLOR_OPTIONS) {
-    chrome.contextMenus.create({
+    await createMenuItem({
       id: `color-${color.id}`,
       parentId: 'color-menu',
       title: color.label,
       type: 'radio',
+      checked: color.id === colorId,
       contexts: ['action'],
     })
   }
 
   // Size menu
-  chrome.contextMenus.create({
+  await createMenuItem({
     id: 'size-menu',
     title: '📐 Size',
     contexts: ['action'],
   })
 
   for (const size of SIZE_OPTIONS) {
-    chrome.contextMenus.create({
+    await createMenuItem({
       id: `size-${size.id}`,
       parentId: 'size-menu',
       title: size.label,
       type: 'radio',
+      checked: size.id === sizeId,
       contexts: ['action'],
     })
   }
-
-  // Set initial checked states
-  chrome.storage.local.get([WIDGET_COLOR_KEY, WIDGET_SIZE_KEY]).then((result) => {
-    const color = result[WIDGET_COLOR_KEY] || 'green'
-    const size = result[WIDGET_SIZE_KEY] || 'normal'
-    chrome.contextMenus.update(`color-${color}`, { checked: true })
-    chrome.contextMenus.update(`size-${size}`, { checked: true })
-  })
 }
 
 // Handle context menu clicks
