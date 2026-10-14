@@ -81,7 +81,7 @@ The validator prints JSON grouped into `ws_confirmed`, `http_confirmed`, and `re
 
 ## v2.0: one fee suggestion for Rabby
 
-The widget shows one **Suggested** gwei value. Click it to copy the number, then paste it into Rabby's **Custom Gas Price** and **Max Priority Fee** fields. With both fields equal, the effective price per gas equals the quoted value when the transaction is included. The suggestion estimates ordinary Ethereum mainnet transaction fees, not blob fees, gas limits, transaction success, or guaranteed inclusion.
+The widget shows one **Forecast** gwei value with a copy icon. Click anywhere in the field to copy the number, then paste it into Rabby's **Custom Gas Price** and **Max Priority Fee** fields. With both fields equal, the effective price per gas equals the quoted value when the transaction is included. The suggestion estimates ordinary Ethereum mainnet transaction fees, not blob fees, gas limits, transaction success, or guaranteed inclusion.
 
 The suggestion is a cost-oriented market reference, not a bid to compete with high-paying transactions for next-block inclusion. It does not use priority-fee percentiles.
 
@@ -99,7 +99,7 @@ All calculations use integer wei. Values use at most three decimal places in gwe
 
 Base-fee history is fetched immediately; one to four returned blocks work too. While it is loading or unavailable, a single current block supplies the same bounded reference and marks it **Provisional**. After 45 seconds without a newer block timestamp, copying is disabled until fresh data arrives.
 
-Five rows show actual observed base fees. The ambiguous header percentage has been removed. Row ages are block ages; the footer shows time since receiving the latest displayed block. History starts filling as blocks are observed, independently of the immediately fetched estimator history.
+Rows show actual observed base fees and adapt to the available window height. Up to 50 received blocks are retained in memory, so shrinking the window does not discard them. The header and window title read **Gas Notify**. A brief checkmark confirms copying; ordinary copy instructions are omitted. The ambiguous header percentage has been removed. Row ages are block ages (seconds through `99s`, then compact minutes/hours); the footer shows time since receiving the latest displayed block. History starts filling as blocks are observed, independently of the immediately fetched estimator history.
 
 Color and size settings survive reloads, the toolbar badge follows the accent, and window position is remembered and clamped to current display work areas. The window can be freely resized; the Normal/Large menu applies a preset only when explicitly selected. Click the extension action to open/focus, double-click to close. Display information keeps the window on-screen; clipboard-write permission supports the copy button.
 

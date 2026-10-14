@@ -19,5 +19,5 @@ export function formatGwei(value: number): string {
 
 export function formatAge(timestampMs: number): string {
   const seconds = Math.max(0, Math.floor((Date.now() - timestampMs) / 1000))
-  return seconds < 60 ? `${String(seconds).padStart(2, '0')}s` : `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+  return seconds < 100 ? `${String(seconds).padStart(2, '0')}s` : seconds < 3600 ? `${Math.floor(seconds / 60)}m` : `${Math.floor(seconds / 3600)}h`
 }

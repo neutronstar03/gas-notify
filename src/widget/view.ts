@@ -4,7 +4,7 @@ import { RPC_CONFIG } from './config'
 import { formatAge, formatWeiGwei } from './format'
 import { mustGetElement } from './utils'
 
-const MAX_ROWS = 5
+const MAX_ROWS = 50
 
 export class WidgetView {
   private readonly rowsEl = mustGetElement<HTMLElement>('gas-notify-rows')
@@ -14,17 +14,21 @@ export class WidgetView {
   private readonly suggestionEl = mustGetElement<HTMLButtonElement>('gas-notify-suggestion')
   private readonly valueEl = mustGetElement<HTMLElement>('gas-notify-suggestion-value')
   private readonly noteEl = mustGetElement<HTMLElement>('gas-notify-suggestion-note')
+  private readonly feedbackEl = mustGetElement<HTMLElement>('gas-notify-copy-feedback')
   private recent: Observation[] = []
   private estimate: FeeEstimate | null = null
   private status = 'Connecting…'
   private mode: ConnectionMode = 'down'
   private copyMessage = ''
   private copyUntil = 0
+  private visibleRows = 5
 
   constructor() {
+    window.addEventListener('resize', () => this.render())
     this.suggestionEl.addEventListener('click', async () => {
       if (!this.canCopy())
         return
+      this.feedbackEl.textContent = ''
       const value = formatWeiGwei(this.estimate!.feeWei, true)
       try {
         await navigator.clipboard.writeText(value)
@@ -34,6 +38,7 @@ export class WidgetView {
         this.copyMessage = 'Copy failed — try again'
       }
       this.copyUntil = Date.now() + 2000
+      this.feedbackEl.textContent = this.copyMessage
       this.render()
     })
   }
@@ -55,8 +60,13 @@ export class WidgetView {
 
   setObservation(observation: Observation): void {
     this.recent = [observation, ...this.recent.filter(item => item.blockNumber !== observation.blockNumber)].slice(0, MAX_ROWS)
+    this.renderRows()
+    this.render()
+  }
+
+  private renderRows(): void {
     this.rowsEl.replaceChildren()
-    for (let index = 0; index < MAX_ROWS; index++) {
+    for (let index = 0; index < this.visibleRows; index++) {
       const item = this.recent[index]
       const row = document.createElement('article')
       row.className = `gas-notify-widget__row${index === 0 && item ? ' gas-notify-widget__row--latest' : ''}`
@@ -69,10 +79,30 @@ export class WidgetView {
       fee.textContent = item ? `${formatWeiGwei(item.baseFeeWei)} gwei` : '— gwei'
       const age = document.createElement('span')
       age.className = 'gas-notify-widget__age'
+      age.textContent = item ? formatAge(item.timestampMs) : '—'
       row.append(block, fee, age)
       this.rowsEl.append(row)
     }
-    this.render()
+  }
+
+  private fitRows(): void {
+    if (!this.rowsEl.firstElementChild)
+      this.renderRows()
+    const rowHeight = this.rowsEl.firstElementChild!.getBoundingClientRect().height
+    if (rowHeight <= 0)
+      return
+    const rowsStyle = getComputedStyle(this.rowsEl)
+    const gap = Number.parseFloat(rowsStyle.rowGap) || 0
+    const available = window.innerHeight - this.rowsEl.getBoundingClientRect().top
+      - this.footerEl.getBoundingClientRect().height
+      - (Number.parseFloat(getComputedStyle(document.body).paddingBottom) || 0)
+      - (Number.parseFloat(rowsStyle.paddingBottom) || 0) - 2
+    const capacity = Math.max(1, Math.min(MAX_ROWS, Math.floor((available + gap) / (rowHeight + gap))))
+    const count = Math.min(capacity, Math.max(5, this.recent.length))
+    if (count !== this.visibleRows) {
+      this.visibleRows = count
+      this.renderRows()
+    }
   }
 
   private isStale(): boolean {
@@ -98,9 +128,13 @@ export class WidgetView {
       : 'Waiting for first block…'
     const available = this.canCopy()
     this.suggestionEl.disabled = !available
+    this.suggestionEl.dataset.copied = String(available && Date.now() < this.copyUntil && this.copyMessage === 'Copied')
     this.valueEl.textContent = available ? `${formatWeiGwei(this.estimate!.feeWei, true)} gwei` : stale ? 'Unavailable' : 'Connecting…'
+    this.suggestionEl.setAttribute('aria-label', available ? `Copy forecast: ${this.valueEl.textContent}` : `Forecast: ${this.valueEl.textContent}`)
     this.noteEl.textContent = available
-      ? Date.now() < this.copyUntil ? this.copyMessage : this.estimate!.provisional ? 'Provisional · click to copy' : 'Click to copy for Rabby'
+      ? Date.now() < this.copyUntil && this.copyMessage !== 'Copied' ? this.copyMessage : this.estimate!.provisional ? 'Provisional' : ''
       : stale ? 'Waiting for fresh data' : latest ? 'Waiting for fee estimate' : 'Waiting for network'
+    this.noteEl.hidden = !this.noteEl.textContent
+    this.fitRows()
   }
 }
