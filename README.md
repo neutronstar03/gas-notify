@@ -90,7 +90,7 @@ T = max(median(recent usable tips), latest block tip (zero for an empty block))
 Suggested = max(ceil(B × 1.10), B + T)
 ```
 
-The median of an even sample count rounds upward. All calculations use integer wei. The copied value rounds upward to six decimal places in gwei, retaining individual wei for smaller fees. The latest tip catches spikes already visible in a confirmed block; unseen pending demand can still delay inclusion.
+The median of an even sample count rounds upward. All calculations use integer wei. Values use at most three decimal places in gwei. The copied suggestion rounds upward; positive base fees below 0.001 gwei display as `<0.001`. The latest tip catches spikes already visible in a confirmed block; unseen pending demand can still delay inclusion.
 
 History is fetched immediately, so there is no five-block startup wait. One to four usable blocks work too. Without usable tip history, the widget calculates the next base fee from the latest block's base fee and gas utilization, applies +10%, and marks the suggestion **Provisional**. After 45 seconds without a newer block timestamp, copying is disabled and the widget shows **Unavailable** until fresh data arrives.
 

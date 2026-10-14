@@ -4,9 +4,11 @@ const TRAILING_ZEROS = /0+$/
 export function formatWeiGwei(value: bigint, roundUp = false): string {
   if (value < 0n)
     throw new Error('Fee must be non-negative')
-  // Six decimals normally, retain individual wei for tiny fees. Never copy zero for a positive fee.
-  const unit = value > 0n && value < 1000n ? 1n : 1000n
-  const rounded = roundUp ? (value + unit - 1n) / unit * unit : value / unit * unit
+  // Three decimals in gwei. Copy suggestions upward so display rounding cannot underbid.
+  const unit = 1_000_000n
+  if (!roundUp && value > 0n && value < unit)
+    return '<0.001'
+  const rounded = roundUp ? (value + unit - 1n) / unit * unit : (value + unit / 2n) / unit * unit
   const fraction = (rounded % WEI_PER_GWEI).toString().padStart(9, '0').replace(TRAILING_ZEROS, '')
   return `${rounded / WEI_PER_GWEI}${fraction ? `.${fraction}` : ''}`
 }
